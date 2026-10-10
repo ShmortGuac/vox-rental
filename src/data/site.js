@@ -8,6 +8,14 @@ export const site = {
   instagram: '@vox.records',
   hours: 'Mon – Sun, 10am – 10pm',
   currency: '$',
+  // Google Form where visitors can suggest records to stock
+  suggestUrl: 'https://forms.gle/GhyToP6gWuQRUSSp9',
+}
+
+// Turn sections of the site on/off.
+// gear: headphones, speakers etc. as paid add-ons (data lives in the `gear` table).
+export const features = {
+  gear: false,
 }
 
 // Every rental includes a turntable + one record of the customer's choice.
@@ -29,7 +37,7 @@ export const delivery = {
 export const faqs = [
   {
     q: 'What do I get with a rental?',
-    a: 'A turntable and one record of your choice, delivered and set up for you. Want more records, headphones or speakers? Add them on for a small extra cost.',
+    a: 'A turntable and one record of your choice, delivered and set up for you. Want more than one record? Add extras for a small fee.',
   },
   {
     q: 'Do I need my own turntable?',
@@ -45,6 +53,6 @@ export const faqs = [
   },
   {
     q: 'Can I extend my rental?',
-    a: 'Usually, yes. Message us before your rental ends and we\'ll extend it if nobody has the gear booked.',
+    a: 'Usually, yes. Message us before your rental ends and we\'ll extend it if nobody has it booked.',
   },
 ]

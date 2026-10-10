@@ -1,6 +1,6 @@
 <script setup>
 import VoxLogo from './VoxLogo.vue'
-import { site } from '../data/site'
+import { site, features } from '../data/site'
 
 const year = new Date().getFullYear()
 </script>
@@ -31,9 +31,10 @@ const year = new Date().getFullYear()
         <h4>Explore</h4>
         <p><RouterLink to="/">Home</RouterLink></p>
         <p><RouterLink to="/catalog">Catalog</RouterLink></p>
-        <p><RouterLink :to="{ path: '/catalog', query: { tab: 'gear' } }">Gear</RouterLink></p>
+        <p v-if="features.gear"><RouterLink :to="{ path: '/catalog', query: { tab: 'gear' } }">Gear</RouterLink></p>
         <p><RouterLink :to="{ path: '/', hash: '#pricing' }">Pricing</RouterLink></p>
         <p><RouterLink :to="{ path: '/', hash: '#faq' }">FAQ</RouterLink></p>
+        <p><a :href="site.suggestUrl" target="_blank" rel="noopener">Suggest a vinyl ↗</a></p>
       </div>
     </div>
     <div class="wrap legal">© {{ year }} {{ site.name }}. All rights reserved.</div>

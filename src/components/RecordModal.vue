@@ -1,9 +1,9 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import RecordArt from './RecordArt.vue'
+import { genreLabel } from '../stores/catalog'
 import { site, extraRecord } from '../data/site'
 import { hasRecord, toggleRecord, money, rental } from '../stores/rental'
-import { parseSetlist } from '../stores/catalog'
 
 const props = defineProps({
   record: { type: Object, required: true },
@@ -11,11 +11,20 @@ const props = defineProps({
 const emit = defineEmits(['close'])
 
 const closeBtn = ref(null)
-const setlist = computed(() => parseSetlist(props.record.setlist))
+const setlist = computed(() => props.record.setlist)
+
+// Single line breaks flow as normal text; a blank line starts a new paragraph.
+const reviewParagraphs = computed(() =>
+  (props.record.description || '')
+    .split(/\n\s*\n/)
+    .map((p) => p.replace(/\s*\n\s*/g, ' ').trim())
+    .filter(Boolean),
+)
 
 const waitlistMailto = computed(() => {
   const r = props.record
-  const body = `Hi VOX,\n\nCould you let me know when "${r.title}" by ${r.artist} is back?\n\nName:\nPhone:\n\nThanks!`
+  const when = r.status === 'Coming Soon' ? 'is available to rent' : 'is back'
+  const body = `Hi VOX,\n\nCould you let me know when "${r.title}" by ${r.artist} ${when}?\n\nName:\nPhone:\n\nThanks!`
   return `mailto:${site.email}?subject=${encodeURIComponent(`Waitlist: ${r.title}`)}&body=${encodeURIComponent(body)}`
 })
 
@@ -45,6 +54,8 @@ onUnmounted(() => {
       <div class="dialog" role="dialog" aria-modal="true" :aria-label="record.title">
         <button ref="closeBtn" class="close" aria-label="Close" @click="emit('close')">×</button>
 
+        <!-- Only this inner area scrolls, so the close button stays put -->
+        <div class="body">
         <div class="side">
           <div class="art-wrap">
             <RecordArt :record="record" :disc="false" />
@@ -62,15 +73,21 @@ onUnmounted(() => {
         </div>
 
         <div class="info">
-          <p class="eyebrow">{{ record.genre }} · {{ record.year }}</p>
+          <p class="eyebrow">{{ [genreLabel(record), record.year].filter(Boolean).join(' · ') }}</p>
           <h2>{{ record.title }}</h2>
           <p class="artist">{{ record.artist }}</p>
-          <p v-if="record.description" class="notes">{{ record.description }}</p>
+          <p v-if="record.artistAlt" class="artist-alt" lang="ja">{{ record.artistAlt }}</p>
+          <figure v-if="record.description" class="review">
+            <figcaption class="review-label">The {{ site.name }} review</figcaption>
+            <blockquote>
+              <p v-for="(para, i) in reviewParagraphs" :key="i">{{ para }}</p>
+            </blockquote>
+            <p class="review-sign">— {{ record.reviewer ? `${record.reviewer} from the ${site.name} Crew` : `The ${site.name} Crew` }}</p>
+          </figure>
 
           <dl>
             <div><dt>Format</dt><dd>{{ record.format }}</dd></div>
-            <div><dt>Condition</dt><dd>{{ record.condition }}</dd></div>
-            <div><dt>Status</dt><dd>{{ record.available ? 'Available' : 'On loan' }}</dd></div>
+            <div><dt>Status</dt><dd>{{ record.status }}</dd></div>
           </dl>
 
           <div class="buy">
@@ -80,12 +97,15 @@ onUnmounted(() => {
               </button>
               <button v-if="hasRecord(record.id)" class="btn btn--red" @click="reviewRental">Review rental →</button>
             </template>
-            <a v-else class="btn btn--ghost" :href="waitlistMailto">Ask when it's back</a>
+            <a v-else class="btn btn--ghost" :href="waitlistMailto">
+              {{ record.status === 'Coming Soon' ? 'Notify me when it arrives' : "Ask when it's back" }}
+            </a>
           </div>
           <p class="hint">
             Your first record comes free with the turntable. Each extra record is
             +{{ money(extraRecord.price) }}/{{ extraRecord.per }}.
           </p>
+        </div>
         </div>
       </div>
     </div>
@@ -108,15 +128,23 @@ onUnmounted(() => {
   position: relative;
   width: min(920px, 100%);
   max-height: calc(100vh - 32px);
-  overflow: auto;
+  display: flex;
+  overflow: hidden;
   background: var(--card);
   border-radius: 20px;
+  animation: pop 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.body {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 40px;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 40px;
   align-items: start;
-  animation: pop 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .close {
@@ -126,8 +154,9 @@ onUnmounted(() => {
   width: 40px;
   height: 40px;
   border-radius: 50%;
+  z-index: 1;
   border: 0;
-  background: transparent;
+  background: var(--card);
   font-size: 28px;
   line-height: 1;
   cursor: pointer;
@@ -189,19 +218,68 @@ h2 {
   margin-top: 8px;
 }
 
+.artist-alt {
+  font-size: 16px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
 .artist {
   font-size: 19px;
   color: var(--muted);
   margin-top: 6px;
 }
 
-.notes {
-  margin-top: 20px;
+.review {
+  position: relative;
+  margin: 24px 0 0;
+  padding: 20px 22px 18px 22px;
+  background: var(--paper);
+  border-left: 3px solid var(--red);
+  border-radius: 4px 14px 14px 4px;
+}
+
+.review::before {
+  content: '\201C';
+  position: absolute;
+  top: 2px;
+  right: 16px;
+  font-size: 72px;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--red);
+  opacity: 0.25;
+}
+
+.review-label {
+  font-family: var(--mono);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--red-dark);
+  margin-bottom: 8px;
+}
+
+.review blockquote {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+.review blockquote p + p {
+  margin-top: 10px;
+}
+
+.review-sign {
+  margin-top: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--muted);
 }
 
 dl {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 12px;
   margin: 24px 0;
   padding: 16px 0;
@@ -243,7 +321,7 @@ dd {
 }
 
 @media (max-width: 720px) {
-  .dialog {
+  .body {
     grid-template-columns: 1fr;
     padding: 24px;
     gap: 24px;

@@ -2,7 +2,7 @@
 import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import GearIcon from './GearIcon.vue'
-import { durations, extraRecord, delivery } from '../data/site'
+import { durations, extraRecord, delivery, features } from '../data/site'
 import { rental, summary, toggleRecord, toggleGear, gearCost, money, requestMailto } from '../stores/rental'
 
 const route = useRoute()
@@ -67,7 +67,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKey))
           <div class="drawer-body">
             <!-- Duration -->
             <section>
-              <h3>1. How long?</h3>
+              <h3>How long?</h3>
               <div class="seg">
                 <button
                   v-for="d in durations"
@@ -85,7 +85,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKey))
 
             <!-- Records -->
             <section>
-              <h3>2. Records</h3>
+              <h3>Records</h3>
               <ul v-if="summary.records.length" class="lines">
                 <li v-for="(r, i) in summary.records" :key="r.id">
                   <img v-if="r.image" class="swatch" :src="r.image" alt="" />
@@ -105,8 +105,8 @@ onUnmounted(() => document.removeEventListener('keydown', onKey))
             </section>
 
             <!-- Gear -->
-            <section>
-              <h3>3. Add-ons</h3>
+            <section v-if="features.gear">
+              <h3>Add-ons</h3>
               <ul v-if="summary.items.length" class="lines">
                 <li v-for="g in summary.items" :key="g.id">
                   <span class="swatch gear"><GearIcon :name="g.icon" /></span>
@@ -124,7 +124,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKey))
 
             <!-- Delivery -->
             <section>
-              <h3>4. Delivery</h3>
+              <h3>Delivery</h3>
               <div class="seg">
                 <button :class="{ active: !rental.offCampus }" :aria-pressed="!rental.offCampus" @click="rental.offCampus = false">
                   <strong>{{ delivery.campus.label }}</strong>
@@ -140,7 +140,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKey))
 
             <!-- Details -->
             <section>
-              <h3>5. Your details</h3>
+              <h3>Your details</h3>
               <div class="fields">
                 <label>Name<input v-model="rental.details.name" autocomplete="name" /></label>
                 <label>Phone<input v-model="rental.details.phone" type="tel" autocomplete="tel" /></label>
@@ -305,6 +305,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKey))
 }
 
 .drawer-body {
+  counter-reset: step;
   flex: 1;
   overflow-y: auto;
   padding: 8px 24px 24px;
@@ -317,6 +318,11 @@ section {
 
 section:last-child {
   border-bottom: 0;
+}
+
+h3::before {
+  counter-increment: step;
+  content: counter(step) '. ';
 }
 
 h3 {

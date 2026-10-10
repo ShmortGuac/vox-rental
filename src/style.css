@@ -7,7 +7,8 @@
   --muted: #6d6760;
   --line: rgba(19, 19, 19, 0.14);
   --radius: 14px;
-  --font: 'Archivo', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* Noto Sans JP only kicks in for Japanese characters Archivo doesn't have */
+  --font: 'Archivo', 'Noto Sans JP', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --mono: 'DM Mono', ui-monospace, Consolas, monospace;
   --wrap: 1200px;
 }
@@ -39,13 +40,50 @@ svg {
   max-width: 100%;
 }
 
+/* Scrollbars: thin rounded thumb, no track, no arrow buttons */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+  margin-block: 14px; /* keep the thumb clear of rounded corners */
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(19, 19, 19, 0.25);
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(19, 19, 19, 0.45);
+}
+
+::-webkit-scrollbar-button,
+::-webkit-scrollbar-corner {
+  display: none;
+  background: transparent;
+}
+
+/* Firefox (doesn't support the ::-webkit-scrollbar rules above) */
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(19, 19, 19, 0.3) transparent;
+  }
+}
+
 a {
   color: inherit;
 }
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
   color: inherit;
 }

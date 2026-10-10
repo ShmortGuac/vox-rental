@@ -6,6 +6,7 @@ export default createRouter({
   routes: [
     { path: '/', name: 'home', component: HomeView },
     { path: '/catalog', name: 'catalog', component: () => import('./views/CatalogView.vue') },
+    { path: '/admin', name: 'admin', component: () => import('./views/AdminView.vue'), meta: { bare: true } },
     { path: '/:pathMatch(.*)*', redirect: '/' },
   ],
   scrollBehavior(to, from, saved) {

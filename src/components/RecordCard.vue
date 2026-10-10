@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import RecordArt from './RecordArt.vue'
+import { genreLabel } from '../stores/catalog'
 import { hasRecord, toggleRecord } from '../stores/rental'
 
 defineProps({
@@ -9,6 +10,7 @@ defineProps({
 defineEmits(['open'])
 
 const hover = ref(false)
+const statusClass = { Available: 'in', 'In Rent': 'out', 'Coming Soon': 'soon' }
 </script>
 
 <template>
@@ -22,13 +24,14 @@ const hover = ref(false)
       <RecordArt :record="record" />
       <div class="meta">
         <div class="row">
-          <span class="genre">{{ record.genre }} · {{ record.year }}</span>
-          <span class="status" :class="record.available ? 'in' : 'out'">
-            {{ record.available ? 'Available' : 'On loan' }}
+          <span class="genre" :title="[genreLabel(record), record.year].filter(Boolean).join(' · ')">
+            <span class="genre-name">{{ genreLabel(record) }}</span><span v-if="record.year">{{ record.genres.length ? ' · ' : '' }}{{ record.year }}</span>
           </span>
+          <span class="status" :class="statusClass[record.status]">{{ record.status }}</span>
         </div>
         <h3>{{ record.title }}</h3>
         <p class="artist">{{ record.artist }}</p>
+        <p v-if="record.artistAlt" class="artist-alt" lang="ja">{{ record.artistAlt }}</p>
       </div>
     </button>
 
@@ -38,7 +41,8 @@ const hover = ref(false)
       :disabled="!record.available"
       @click="toggleRecord(record.id)"
     >
-      <template v-if="!record.available">Currently on loan</template>
+      <template v-if="record.status === 'In Rent'">Currently in rent</template>
+      <template v-else-if="record.status === 'Coming Soon'">Coming soon</template>
       <template v-else-if="hasRecord(record.id)">✓ In your rental</template>
       <template v-else>+ Add to rental</template>
     </button>
@@ -50,6 +54,8 @@ const hover = ref(false)
   display: flex;
   flex-direction: column;
   gap: 14px;
+  height: 100%; /* fill the grid row so buttons line up */
+  min-width: 0; /* let long one-line text truncate instead of widening the grid column */
 }
 
 .open {
@@ -58,6 +64,7 @@ const hover = ref(false)
   display: flex;
   flex-direction: column;
   gap: 16px;
+  flex: 1; /* takes the spare height, pushing the button to the bottom */
   cursor: pointer;
   border-radius: var(--radius);
 }
@@ -84,6 +91,9 @@ const hover = ref(false)
 }
 
 .genre {
+  display: flex;
+  min-width: 0;
+  white-space: nowrap;
   font-family: var(--mono);
   font-size: 12px;
   text-transform: uppercase;
@@ -91,7 +101,13 @@ const hover = ref(false)
   color: var(--muted);
 }
 
+.genre-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .status {
+  flex: none;
   font-family: var(--mono);
   font-size: 11px;
   text-transform: uppercase;
@@ -106,6 +122,11 @@ const hover = ref(false)
   color: var(--paper);
 }
 
+.status.soon {
+  border: 1px solid var(--red);
+  color: var(--red-dark);
+}
+
 .status.out {
   border: 1px solid var(--line);
   color: var(--muted);
@@ -118,12 +139,19 @@ h3 {
   font-weight: 800;
 }
 
+.artist-alt {
+  font-size: 14px;
+  color: var(--muted);
+  opacity: 0.85;
+}
+
 .artist {
   color: var(--muted);
   margin-top: 2px;
 }
 
 .add {
+  margin-top: auto;
   margin-right: 14%;
   padding: 10px 14px;
   border-radius: 999px;

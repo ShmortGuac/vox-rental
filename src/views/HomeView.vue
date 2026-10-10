@@ -4,7 +4,7 @@ import RecordCard from '../components/RecordCard.vue'
 import RecordModal from '../components/RecordModal.vue'
 import GearCard from '../components/GearCard.vue'
 import { catalog, genres } from '../stores/catalog'
-import { site, durations, extraRecord, delivery, faqs } from '../data/site'
+import { site, durations, extraRecord, delivery, faqs, features } from '../data/site'
 import { money } from '../stores/rental'
 
 const featured = computed(() => catalog.records.filter((v) => v.available).slice(0, 4))
@@ -13,7 +13,7 @@ const selected = ref(null)
 
 const steps = [
   { n: '01', title: 'Pick a record', text: 'Choose a record from the catalog. It comes with the turntable. Want more than one? Add extras for a small fee.' },
-  { n: '02', title: 'Choose your time & extras', text: 'Rent for a day, a few days or a week. Add headphones or speakers if you want the full setup.' },
+  { n: '02', title: 'Choose how long', text: 'Rent for a day, a few days or a week. Want more than one record? Add extras for a small fee.' },
   { n: '03', title: 'We deliver & set up', text: "We bring everything to you free anywhere on campus, set it up, and collect it when you're done. Off campus? We deliver for a fee." },
 ]
 </script>
@@ -27,7 +27,7 @@ const steps = [
         <h1>Spin it.<br />Return it.<br /><span>Spin something new.</span></h1>
         <p class="lede">
           {{ site.name }} rents out a turntable with a record of your choice, delivered free anywhere on campus.
-          Add more records, headphones or speakers whenever you like.
+          Want more than one record? Add as many as you like.
         </p>
         <div class="ctas">
           <RouterLink to="/catalog" class="btn btn--red">Browse the catalog →</RouterLink>
@@ -98,7 +98,7 @@ const steps = [
   </section>
 
   <!-- Gear -->
-  <section class="section wrap">
+  <section v-if="features.gear" class="section wrap">
     <div class="section-head row">
       <div>
         <p class="eyebrow">Add-ons</p>
@@ -140,7 +140,7 @@ const steps = [
         <h3>Extras</h3>
         <ul class="price-list">
           <li><span>Each extra record</span><strong>+{{ money(extraRecord.price) }} / {{ extraRecord.per }}</strong></li>
-          <li v-for="g in catalog.gear" :key="g.id">
+          <li v-for="g in features.gear ? catalog.gear : []" :key="g.id">
             <span>{{ g.name }}</span><strong>+{{ money(g.price) }} / {{ g.per }}</strong>
           </li>
         </ul>

@@ -25,18 +25,53 @@ Without any setup the site runs on the sample data in `src/data/`. Follow the st
 
 > Only use the **publishable/anon** key. Never put the secret / `service_role` key in `.env` — it ends up in the browser.
 
-## 2. Add album covers with Cloudinary
+## 2. Album covers with Cloudinary
 
-1. Create a free account at [cloudinary.com](https://cloudinary.com).
-2. Go to **Media Library** and upload a cover (square images work best).
-3. Click the image → **Copy URL** (it looks like `https://res.cloudinary.com/.../image/upload/v123/abbey-road.jpg`).
-4. In Supabase **Table Editor → records**, paste it into that record's `cover_url`.
+Covers are uploaded from the admin page (`/admin`) straight to Cloudinary. A Supabase Edge Function
+(`supabase/functions/cloudinary-sign`) checks the user is an admin and signs each upload, so the
+Cloudinary API secret never reaches the browser.
 
-The site automatically resizes and compresses Cloudinary images. Records without a `cover_url` get a generated sleeve.
+**One-time setup**
+
+1. In the Cloudinary dashboard open **Settings → API Keys** (or the dashboard home) and note your
+   **Cloud name**, **API Key** and **API Secret**.
+2. In Supabase open **Edge Functions → Secrets** and add:
+   | Name | Value |
+   |---|---|
+   | `CLOUDINARY_CLOUD_NAME` | your cloud name |
+   | `CLOUDINARY_API_KEY` | your API key |
+   | `CLOUDINARY_API_SECRET` | your API secret |
+3. Done — the **Upload image** button in the admin form now works. Images go into the `vox-covers` folder.
+
+You can still paste an image link instead of uploading. Images are resized and compressed automatically
+when shown on the site; records without a cover get a generated sleeve.
+
+To redeploy the function after editing it: `supabase functions deploy cloudinary-sign --no-verify-jwt`
+(it checks admin access itself).
+
+## Admin page (`/admin`)
+
+Add, edit and delete records, change their status, and edit setlists side by side — no JSON typing.
+Upload cover images right in the form (see Cloudinary setup above), or paste an image link.
+
+**Giving someone admin access**
+
+1. Supabase → **Authentication → Users → Add user → Create new user**. Enter their email and a password and tick **Auto Confirm User**.
+2. Supabase → **SQL Editor**, run (with their email):
+   ```sql
+   insert into public.admins (user_id)
+   select id from auth.users where email = 'them@example.com';
+   ```
+3. They sign in at `/admin`.
+
+Only users in the `admins` table can change records — the database enforces this, so other signed-in accounts can't edit anything.
+Recommended: turn off public sign-ups in **Authentication → Sign In / Providers** ("Allow new users to sign up"), since staff accounts are created by hand.
+
+To remove someone: `delete from public.admins where user_id = (select id from auth.users where email = 'them@example.com');`
 
 ## Managing the catalog
 
-Everything is edited in Supabase **Table Editor** — no code changes or redeploys needed.
+Records can be edited on the admin page or directly in the Supabase **Table Editor** — no code changes or redeploys needed.
 
 ### `records`
 
@@ -44,14 +79,33 @@ Everything is edited in Supabase **Table Editor** — no code changes or redeplo
 |---|---|
 | `cover_url` | Album cover link from Cloudinary (optional) |
 | `title` | Album title |
-| `artist` | Artist name |
-| `setlist` | One track per line. Lines like `Side A` / `Side B` become headings. |
-| `description` | Your description / review |
-| `genre` | e.g. Jazz, Soul, Hip-Hop — the catalog's genre filters are built from this |
+| `artist` | Artist name in English letters (use the artist's official romanization, e.g. Mariya Takeuchi) |
+| `artist_alt` | Optional: the name in its original language, e.g. 竹内まりや — shown under the artist name and searchable |
+| `setlist` | JSON list of sides — see [Setlists](#setlists) below |
+| `description` | Your review of the record — shown as "The VOX review" in the record popup. Leave a blank line between paragraphs. |
+| `reviewer` | Who wrote the review — shown as "— Name from the VOX Crew". Leave empty for "— The VOX Crew". |
+| `genres` | One or more genres, e.g. `{Rock,Alternative}` (up to 8). In the admin page, type a genre and press Enter. The catalog's genre filters are built from these. |
 | `year` | Release year |
 | `format` | `LP`, `2xLP`, `3xLP`, `EP`, `7"`, `10"`, `12"` |
-| `condition` | `Mint`, `Near Mint`, `Very Good+`, `Very Good`, `Good`, `Fair` |
-| `status` | `available` · `on_loan` (shown greyed out) · `unlisted` (hidden from the site) |
+| `status` | `Available` · `In Rent` (shown greyed out, customers can ask when it's back) · `Coming Soon` (shown, not rentable yet) |
+
+### Setlists
+
+`setlist` is JSON. Use a list of sides — as many as the record has:
+
+```json
+[
+  { "side": "A", "tracks": ["Come Together", "Something"] },
+  { "side": "B", "tracks": ["Here Comes the Sun", "Because"] }
+]
+```
+
+- **1 side:** `[{ "side": "A", "tracks": ["...", "..."] }]`
+- **4 sides (2xLP):** four entries, e.g. sides `"1"`–`"4"` or `"A"`–`"D"`
+- **No side labels:** just a list of tracks — `["Track one", "Track two"]`
+- Short side names show as "Side A" / "Side 1"; longer ones (e.g. `"Bonus"`) are shown as written.
+
+Supabase rejects a setlist that isn't in one of these shapes, so a typo can't break the site.
 
 ### `gear`
 

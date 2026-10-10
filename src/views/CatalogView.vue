@@ -5,7 +5,7 @@ import RecordCard from '../components/RecordCard.vue'
 import RecordModal from '../components/RecordModal.vue'
 import GearCard from '../components/GearCard.vue'
 import { catalog, genres } from '../stores/catalog'
-import { extraRecord } from '../data/site'
+import { extraRecord, features, site } from '../data/site'
 import { money } from '../stores/rental'
 
 const route = useRoute()
@@ -46,10 +46,12 @@ const sorters = {
 const results = computed(() => {
   const q = search.value.trim().toLowerCase()
   return catalog.records
-    .filter((v) => genre.value === 'All' || v.genre === genre.value)
+    .filter((v) => genre.value === 'All' || v.genres.includes(genre.value))
     .filter((v) => !onlyAvailable.value || v.available)
-    .filter((v) => !q || `${v.title} ${v.artist} ${v.genre} ${v.year}`.toLowerCase().includes(q))
+    .filter((v) => !q || `${v.title} ${v.artist} ${v.artistAlt} ${v.genres.join(' ')} ${v.year}`.toLowerCase().includes(q))
     .sort(sorters[sort.value] ?? sorters.title)
+    // Coming Soon records always go last, keeping the chosen order within each group
+    .sort((a, b) => (a.status === 'Coming Soon') - (b.status === 'Coming Soon'))
 })
 
 function reset() {
@@ -58,14 +60,15 @@ function reset() {
 </script>
 
 <template>
-  <section class="head">
+  <section class="head" :class="{ 'no-tabs': !features.gear }">
     <div class="wrap">
       <p class="eyebrow">The catalog</p>
-      <h1>Records<br />& gear.</h1>
+      <h1 v-if="features.gear">Records<br />& gear.</h1>
+      <h1 v-else>Every record<br />we've got.</h1>
       <p class="sub">
         Your first record comes with the turntable. Each extra record is +{{ money(extraRecord.price) }}/{{ extraRecord.per }}.
       </p>
-      <div class="tabs" role="tablist">
+      <div v-if="features.gear" class="tabs" role="tablist">
         <button role="tab" :aria-selected="tab === 'records'" :class="{ active: tab === 'records' }" @click="tab = ''">
           Records <span>{{ catalog.records.length }}</span>
         </button>
@@ -76,7 +79,7 @@ function reset() {
     </div>
   </section>
 
-  <section v-if="tab === 'gear'" class="wrap results">
+  <section v-if="features.gear && tab === 'gear'" class="wrap results">
     <p class="count">Optional extras — add as many as you like to your rental.</p>
     <div class="gear-grid">
       <GearCard v-for="g in catalog.gear" :key="g.id" :item="g" />
@@ -145,9 +148,21 @@ function reset() {
     <div v-else class="empty">
       <div class="empty-disc" aria-hidden="true" />
       <h2>Nothing in this crate.</h2>
-      <p>Try a different search or genre.</p>
-      <button class="btn btn--ghost" @click="reset">Clear filters</button>
+      <p>Try a different search or genre — or tell us what you're looking for.</p>
+      <div class="empty-actions">
+        <button class="btn btn--ghost" @click="reset">Clear filters</button>
+        <a class="btn btn--red" :href="site.suggestUrl" target="_blank" rel="noopener">Suggest a vinyl ↗</a>
+      </div>
     </div>
+
+    <aside v-if="!catalog.loading && !catalog.error && results.length" class="suggest">
+      <div class="suggest-disc" aria-hidden="true" />
+      <div class="suggest-text">
+        <h2>Can't find a record?</h2>
+        <p>Tell us what you'd love to spin and we'll try to add it to the crates.</p>
+      </div>
+      <a class="btn" :href="site.suggestUrl" target="_blank" rel="noopener">Suggest a vinyl ↗</a>
+    </aside>
   </section>
   </template>
 
@@ -157,6 +172,10 @@ function reset() {
 <style scoped>
 .head {
   padding: 64px 0 0;
+}
+
+.head.no-tabs {
+  padding-bottom: 40px;
 }
 
 .tabs {
@@ -406,6 +425,60 @@ h1 {
   margin-bottom: 12px;
 }
 
+.empty-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* Suggest-a-vinyl callout */
+.suggest {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-top: 72px;
+  padding: 28px 32px;
+  border-radius: 20px;
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.suggest-disc {
+  flex: none;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, var(--paper) 0 6%, var(--red) 6.5% 30%, transparent 31%),
+    repeating-radial-gradient(circle, #2a2a2a 0 1.5px, #1a1a1a 1.5px 3px);
+}
+
+.suggest-text {
+  flex: 1;
+}
+
+.suggest h2 {
+  font-size: 26px;
+}
+
+.suggest p {
+  margin-top: 6px;
+  color: #b9b3aa;
+}
+
+.suggest .btn {
+  background: var(--red);
+  border-color: var(--red);
+  color: #fff;
+  white-space: nowrap;
+}
+
+.suggest .btn:hover {
+  background: var(--red-dark);
+  border-color: var(--red-dark);
+}
+
 .empty-disc {
   width: 120px;
   aspect-ratio: 1;
@@ -417,6 +490,12 @@ h1 {
 }
 
 @media (max-width: 760px) {
+  .suggest {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 24px;
+    gap: 16px;
+  }
   .toolbar {
     grid-template-columns: 1fr;
   }

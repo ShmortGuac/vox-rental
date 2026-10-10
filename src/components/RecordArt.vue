@@ -1,7 +1,7 @@
 <script setup>
 // A sleeve with the vinyl peeking out. The record slides out when the parent
 // has the `is-hover` state (hover/focus on a card). Pass :disc="false" for
-// the sleeve on its own.
+// the sleeve on its own. A "Coming Soon" record gets a banner across the cover.
 defineProps({
   record: { type: Object, required: true },
   disc: { type: Boolean, default: true },
@@ -23,6 +23,10 @@ defineProps({
         <span class="t">{{ record.title }}</span>
         <span class="r">{{ record.artist }}</span>
       </div>
+    </div>
+    <!-- Separate layer over the sleeve, so dimming the cover doesn't dim the banner -->
+    <div v-if="record.status === 'Coming Soon'" class="sleeve-overlay" aria-hidden="true">
+      <div class="banner"><span>Coming soon</span></div>
     </div>
   </div>
 </template>
@@ -69,7 +73,14 @@ defineProps({
 }
 
 :global(.is-hover .rec-disc) {
-  transform: translateX(14%) rotate(120deg);
+  transform: translateX(6%) rotate(120deg); /* small enough to stay inside the gap between cards */
+}
+
+/* Cards sit closer together on phones */
+@media (max-width: 760px) {
+  :global(.is-hover .rec-disc) {
+    transform: translateX(3%) rotate(120deg);
+  }
 }
 
 .sleeve {
@@ -85,6 +96,44 @@ defineProps({
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05), 6px 10px 24px rgba(0, 0, 0, 0.18);
   display: flex;
   align-items: flex-end;
+}
+
+/* "Coming soon" band — sized relative to the sleeve so it works on cards and in the popup */
+.sleeve-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 6px;
+  container-type: inline-size;
+  pointer-events: none;
+}
+
+.banner {
+  position: absolute;
+  left: -10%;
+  right: -10%;
+  top: 50%;
+  transform: translateY(-50%) rotate(-12deg);
+  padding: 3.5cqw 0;
+  background: var(--red);
+  color: #fff;
+  text-align: center;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+  border-block: 2px solid rgba(255, 255, 255, 0.85);
+  pointer-events: none;
+}
+
+.banner span {
+  display: block;
+  font-weight: 900;
+  font-stretch: 90%;
+  font-size: 11cqw;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
 }
 
 .sleeve img {

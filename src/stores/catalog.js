@@ -1,6 +1,7 @@
 import { computed, reactive } from 'vue'
 import { supabase } from '../lib/supabase'
 import { optimizeImage } from '../lib/cloudinary'
+import { features } from '../data/site'
 import { vinyls as sampleRecords } from '../data/vinyls'
 import { gear as sampleGear } from '../data/gear'
 
@@ -36,14 +37,16 @@ function toRecord(row) {
     id: row.id,
     title: row.title,
     artist: row.artist,
+    artistAlt: row.artist_alt?.trim() || '', // original-language name, e.g. 竹内まりや
     year: row.year,
-    genre: row.genre || 'Other',
+    // `genres` is a list; older data may still have a single `genre`
+    genres: (row.genres ?? (row.genre ? [row.genre] : [])).filter(Boolean),
     format: row.format,
-    condition: row.condition,
-    status: row.status,
-    available: row.status === 'available',
-    setlist: row.setlist || '',
+    status: row.status, // 'Available' | 'In Rent' | 'Coming Soon'
+    available: row.status === 'Available',
+    setlist: normalizeSetlist(row.setlist),
     description: row.description || '',
+    reviewer: row.reviewer?.trim() || '',
     image: optimizeImage(row.cover_url),
     cover: generatedCover(row),
   }
@@ -70,9 +73,18 @@ export const catalog = reactive({
   loaded: false,
 })
 
-export const genres = computed(() => [...new Set(catalog.records.map((r) => r.genre))].sort())
+export const genres = computed(() => [...new Set(catalog.records.flatMap((r) => r.genres))].sort())
+
+// "Indie / Rock" — how a record's genres are shown on cards and in the popup
+export const genreLabel = (record) => record.genres.join(' / ')
 
 let pending = null
+
+// Fetch the catalog again (e.g. after an admin edit).
+export function reloadCatalog() {
+  catalog.loaded = false
+  return loadCatalog()
+}
 
 export function loadCatalog() {
   if (catalog.loaded) return Promise.resolve()
@@ -84,12 +96,14 @@ export function loadCatalog() {
   pending = (async () => {
     try {
       if (!supabase) {
-        catalog.records = sampleRecords.filter((r) => r.status !== 'unlisted').map(toRecord)
-        catalog.gear = sampleGear.filter((g) => g.active).map(toGear)
+        catalog.records = sampleRecords.map(toRecord)
+        catalog.gear = features.gear ? sampleGear.filter((g) => g.active).map(toGear) : []
       } else {
         const [records, gear] = await Promise.all([
           supabase.from('records').select('*').order('title'),
-          supabase.from('gear').select('*').order('sort_order').order('name'),
+          features.gear
+            ? supabase.from('gear').select('*').order('sort_order').order('name')
+            : { data: [], error: null },
         ])
         if (records.error) throw records.error
         if (gear.error) throw gear.error
@@ -109,23 +123,28 @@ export function loadCatalog() {
   return pending
 }
 
-// Splits a setlist into sides: lines like "Side A" start a new group.
-export function parseSetlist(text) {
+// Turns the `setlist` JSON into [{ side: 'Side A' | null, tracks: [...] }].
+// Accepts a plain list of tracks (["a", "b"]) or a list of sides
+// ([{ "side": "A", "tracks": ["a", "b"] }, ...]) with any number of sides.
+export function normalizeSetlist(setlist) {
+  if (!Array.isArray(setlist)) return []
   const groups = []
-  let current = null
-  for (const raw of (text || '').split('\n')) {
-    const line = raw.trim()
-    if (!line) continue
-    if (/^side\s+\S+$/i.test(line)) {
-      current = { side: line, tracks: [] }
-      groups.push(current)
-    } else {
-      if (!current) {
-        current = { side: null, tracks: [] }
-        groups.push(current)
-      }
-      current.tracks.push(line)
+  let loose = null
+  for (const item of setlist) {
+    if (typeof item === 'string') {
+      if (!loose) groups.push((loose = { side: null, tracks: [] }))
+      loose.tracks.push(item)
+    } else if (item && Array.isArray(item.tracks)) {
+      loose = null
+      groups.push({ side: sideLabel(item.side), tracks: item.tracks.filter((t) => typeof t === 'string') })
     }
   }
-  return groups
+  return groups.filter((g) => g.tracks.length)
+}
+
+// "A" or 1 → "Side A" / "Side 1"; longer labels like "Bonus" are kept as-is.
+function sideLabel(side) {
+  if (side === null || side === undefined || side === '') return null
+  const text = String(side).trim()
+  return text.length <= 2 ? `Side ${text}` : text
 }

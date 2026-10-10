@@ -2,126 +2,25 @@
 -- These are sample records — replace them with your real collection.
 -- Running it twice will add duplicates.
 
-insert into public.records (cover_url, title, artist, setlist, description, genre, year, format, condition, status) values
-  (null, 'Kind of Blue', 'Miles Davis', 'Side A
-So What
-Freddie Freeloader
-Blue in Green
-Side B
-All Blues
-Flamenco Sketches', 'The best-selling jazz record of all time. Modal, cool and endlessly replayable.', 'Jazz', 1959, 'LP', 'Near Mint', 'available'),
-  (null, 'Rumours', 'Fleetwood Mac', 'Side A
-Second Hand News
-Dreams
-Never Going Back Again
-Don''t Stop
-Go Your Own Way
-Songbird
-Side B
-The Chain
-You Make Loving Fun
-I Don''t Want to Know
-Oh Daddy
-Gold Dust Woman', 'Heartbreak, harmonies and some of the best-produced rock ever pressed.', 'Rock', 1977, 'LP', 'Very Good+', 'available'),
-  (null, 'Blue', 'Joni Mitchell', 'Side A
-All I Want
-My Old Man
-Little Green
-Carey
-Blue
-Side B
-California
-This Flight Tonight
-River
-A Case of You
-The Last Time I Saw Richard', 'Confessional songwriting at its most direct. Best heard late at night.', 'Folk', 1971, 'LP', 'Very Good+', 'on_loan'),
-  (null, 'Discovery', 'Daft Punk', null, 'Glittering French house. Side A alone is worth the rental.', 'Electronic', 2001, '2xLP', 'Mint', 'available'),
-  (null, 'What''s Going On', 'Marvin Gaye', 'Side A
-What''s Going On
-What''s Happening Brother
-Flyin'' High (In the Friendly Sky)
-Save the Children
-God Is Love
-Mercy Mercy Me (The Ecology)
-Side B
-Right On
-Wholy Holy
-Inner City Blues (Make Me Wanna Holler)', 'A seamless, socially conscious soul suite that still sounds urgent.', 'Soul', 1971, 'LP', 'Near Mint', 'available'),
-  (null, 'Random Access Memories', 'Daft Punk', null, 'Recorded with live session players. Made for a good turntable.', 'Electronic', 2013, '2xLP', 'Mint', 'available'),
-  (null, 'A Love Supreme', 'John Coltrane', 'Side A
-Part I – Acknowledgement
-Part II – Resolution
-Side B
-Part III – Pursuance
-Part IV – Psalm', 'A four-part spiritual statement. Play it front to back.', 'Jazz', 1965, 'LP', 'Very Good+', 'on_loan'),
-  (null, 'Abbey Road', 'The Beatles', 'Side A
-Come Together
-Something
-Maxwell''s Silver Hammer
-Oh! Darling
-Octopus''s Garden
-I Want You (She''s So Heavy)
-Side B
-Here Comes the Sun
-Because
-You Never Give Me Your Money
-Sun King
-Mean Mr. Mustard
-Polythene Pam
-She Came In Through the Bathroom Window
-Golden Slumbers
-Carry That Weight
-The End
-Her Majesty', 'The side B medley is one of the great listening experiences on wax.', 'Rock', 1969, 'LP', 'Near Mint', 'available'),
-  (null, 'Channel Orange', 'Frank Ocean', null, 'Lush, cinematic R&B. Pyramids alone runs nearly ten minutes.', 'R&B', 2012, '2xLP', 'Mint', 'available'),
-  (null, 'Songs in the Key of Life', 'Stevie Wonder', null, 'Stevie at the peak of his powers, across four sides.', 'Soul', 1976, '2xLP', 'Very Good+', 'available'),
-  (null, 'Buena Vista Social Club', 'Buena Vista Social Club', null, 'Warm, live-sounding Cuban son. Perfect for a Sunday afternoon.', 'World', 1997, '2xLP', 'Near Mint', 'available'),
-  (null, 'In Rainbows', 'Radiohead', '15 Step
-Bodysnatchers
-Nude
-Weird Fishes/Arpeggi
-All I Need
-Faust Arp
-Reckoner
-House of Cards
-Jigsaw Falling into Place
-Videotape', 'Their warmest record, and it sounds great on vinyl.', 'Rock', 2007, 'LP', 'Mint', 'available'),
-  (null, 'Pink Moon', 'Nick Drake', 'Side A
-Pink Moon
-Place to Be
-Road
-Which Will
-Horn
-Things Behind the Sun
-Side B
-Know
-Parasite
-Free Ride
-Harvest Breed
-From the Morning', 'Just voice, guitar and a bit of piano. Twenty-eight quiet minutes.', 'Folk', 1972, 'LP', 'Very Good', 'available'),
-  (null, 'Selected Ambient Works 85–92', 'Aphex Twin', null, 'Foundational ambient techno. Hazy, melodic and strangely comforting.', 'Electronic', 1992, '2xLP', 'Near Mint', 'on_loan'),
-  (null, 'Getz/Gilberto', 'Stan Getz & João Gilberto', 'Side A
-The Girl from Ipanema
-Doralice
-Para Machucar Meu Coração
-Desafinado
-Side B
-Corcovado
-Só Danço Samba
-O Grande Amor
-Vivo Sonhando', 'The record that brought bossa nova to the world.', 'Jazz', 1964, 'LP', 'Very Good+', 'available'),
-  (null, 'To Pimp a Butterfly', 'Kendrick Lamar', null, 'Jazz, funk and spoken word woven into a dense, rewarding album.', 'Hip-Hop', 2015, '2xLP', 'Mint', 'available'),
-  (null, 'Illmatic', 'Nas', 'The Genesis
-N.Y. State of Mind
-Life''s a Bitch
-The World Is Yours
-Halftime
-Memory Lane (Sittin'' in da Park)
-One Love
-One Time 4 Your Mind
-Represent
-It Ain''t Hard to Tell', 'Ten tracks, no filler. A cornerstone of East Coast hip-hop.', 'Hip-Hop', 1994, 'LP', 'Near Mint', 'available'),
-  (null, 'Lady Soul', 'Aretha Franklin', null, 'Includes "(You Make Me Feel Like) A Natural Woman". Enough said.', 'Soul', 1968, 'LP', 'Very Good', 'available');
+insert into public.records (cover_url, title, artist, setlist, description, genres, year, format, status) values
+  (null, 'Kind of Blue', 'Miles Davis', '[{"side":"A","tracks":["So What","Freddie Freeloader","Blue in Green"]},{"side":"B","tracks":["All Blues","Flamenco Sketches"]}]'::jsonb, 'The best-selling jazz record of all time. Modal, cool and endlessly replayable.', array['Jazz']::text[], 1959, 'LP', 'Available'),
+  (null, 'Rumours', 'Fleetwood Mac', '[{"side":"A","tracks":["Second Hand News","Dreams","Never Going Back Again","Don''t Stop","Go Your Own Way","Songbird"]},{"side":"B","tracks":["The Chain","You Make Loving Fun","I Don''t Want to Know","Oh Daddy","Gold Dust Woman"]}]'::jsonb, 'Heartbreak, harmonies and some of the best-produced rock ever pressed.', array['Rock']::text[], 1977, 'LP', 'Available'),
+  (null, 'Blue', 'Joni Mitchell', '[{"side":"A","tracks":["All I Want","My Old Man","Little Green","Carey","Blue"]},{"side":"B","tracks":["California","This Flight Tonight","River","A Case of You","The Last Time I Saw Richard"]}]'::jsonb, 'Confessional songwriting at its most direct. Best heard late at night.', array['Folk']::text[], 1971, 'LP', 'In Rent'),
+  (null, 'Discovery', 'Daft Punk', null, 'Glittering French house. Side A alone is worth the rental.', array['Electronic', 'House']::text[], 2001, '2xLP', 'Available'),
+  (null, 'What''s Going On', 'Marvin Gaye', '[{"side":"A","tracks":["What''s Going On","What''s Happening Brother","Flyin'' High (In the Friendly Sky)","Save the Children","God Is Love","Mercy Mercy Me (The Ecology)"]},{"side":"B","tracks":["Right On","Wholy Holy","Inner City Blues (Make Me Wanna Holler)"]}]'::jsonb, 'A seamless, socially conscious soul suite that still sounds urgent.', array['Soul']::text[], 1971, 'LP', 'Available'),
+  (null, 'Random Access Memories', 'Daft Punk', null, 'Recorded with live session players. Made for a good turntable.', array['Electronic']::text[], 2013, '2xLP', 'Available'),
+  (null, 'A Love Supreme', 'John Coltrane', '[{"side":"A","tracks":["Part I – Acknowledgement","Part II – Resolution"]},{"side":"B","tracks":["Part III – Pursuance","Part IV – Psalm"]}]'::jsonb, 'A four-part spiritual statement. Play it front to back.', array['Jazz']::text[], 1965, 'LP', 'In Rent'),
+  (null, 'Abbey Road', 'The Beatles', '[{"side":"A","tracks":["Come Together","Something","Maxwell''s Silver Hammer","Oh! Darling","Octopus''s Garden","I Want You (She''s So Heavy)"]},{"side":"B","tracks":["Here Comes the Sun","Because","You Never Give Me Your Money","Sun King","Mean Mr. Mustard","Polythene Pam","She Came In Through the Bathroom Window","Golden Slumbers","Carry That Weight","The End","Her Majesty"]}]'::jsonb, 'The side B medley is one of the great listening experiences on wax.', array['Rock']::text[], 1969, 'LP', 'Available'),
+  (null, 'Channel Orange', 'Frank Ocean', null, 'Lush, cinematic R&B. Pyramids alone runs nearly ten minutes.', array['R&B']::text[], 2012, '2xLP', 'Available'),
+  (null, 'Songs in the Key of Life', 'Stevie Wonder', '[{"side":"1","tracks":["Love''s in Need of Love Today","Have a Talk with God","Village Ghetto Land","Contusion","Sir Duke"]},{"side":"2","tracks":["I Wish","Knocks Me Off My Feet","Pastime Paradise","Summer Soft","Ordinary Pain"]},{"side":"3","tracks":["Isn''t She Lovely","Joy Inside My Tears","Black Man"]},{"side":"4","tracks":["Ngiculela – Es Una Historia – I Am Singing","If It''s Magic","As","Another Star"]}]'::jsonb, 'Stevie at the peak of his powers, across four sides.', array['Soul']::text[], 1976, '2xLP', 'Available'),
+  (null, 'Buena Vista Social Club', 'Buena Vista Social Club', null, 'Warm, live-sounding Cuban son. Perfect for a Sunday afternoon.', array['World']::text[], 1997, '2xLP', 'Available'),
+  (null, 'In Rainbows', 'Radiohead', '["15 Step","Bodysnatchers","Nude","Weird Fishes/Arpeggi","All I Need","Faust Arp","Reckoner","House of Cards","Jigsaw Falling into Place","Videotape"]'::jsonb, 'Their warmest record, and it sounds great on vinyl.', array['Rock']::text[], 2007, 'LP', 'Available'),
+  (null, 'Pink Moon', 'Nick Drake', '[{"side":"A","tracks":["Pink Moon","Place to Be","Road","Which Will","Horn","Things Behind the Sun"]},{"side":"B","tracks":["Know","Parasite","Free Ride","Harvest Breed","From the Morning"]}]'::jsonb, 'Just voice, guitar and a bit of piano. Twenty-eight quiet minutes.', array['Folk']::text[], 1972, 'LP', 'Available'),
+  (null, 'Selected Ambient Works 85–92', 'Aphex Twin', null, 'Foundational ambient techno. Hazy, melodic and strangely comforting.', array['Electronic']::text[], 1992, '2xLP', 'In Rent'),
+  (null, 'Getz/Gilberto', 'Stan Getz & João Gilberto', '[{"side":"A","tracks":["The Girl from Ipanema","Doralice","Para Machucar Meu Coração","Desafinado"]},{"side":"B","tracks":["Corcovado","Só Danço Samba","O Grande Amor","Vivo Sonhando"]}]'::jsonb, 'The record that brought bossa nova to the world.', array['Jazz']::text[], 1964, 'LP', 'Available'),
+  (null, 'To Pimp a Butterfly', 'Kendrick Lamar', null, 'Jazz, funk and spoken word woven into a dense, rewarding album.', array['Hip-Hop', 'Jazz']::text[], 2015, '2xLP', 'Available'),
+  (null, 'Illmatic', 'Nas', '["The Genesis","N.Y. State of Mind","Life''s a Bitch","The World Is Yours","Halftime","Memory Lane (Sittin'' in da Park)","One Love","One Time 4 Your Mind","Represent","It Ain''t Hard to Tell"]'::jsonb, 'Ten tracks, no filler. A cornerstone of East Coast hip-hop.', array['Hip-Hop']::text[], 1994, 'LP', 'Available'),
+  (null, 'Lady Soul', 'Aretha Franklin', null, 'Includes "(You Make Me Feel Like) A Natural Woman". Enough said.', array['Soul']::text[], 1968, 'LP', 'Coming Soon');
 
 insert into public.gear (name, description, image_url, icon, price, price_per, quantity, active, sort_order) values
   ('Over-ear Headphones', 'Closed-back studio headphones. Plugs straight into the turntable — great for dorms.', null, 'headphones', 3, 'day', 3, true, 1),

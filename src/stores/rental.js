@@ -1,6 +1,6 @@
 import { computed, reactive, watch } from 'vue'
 import { catalog } from './catalog'
-import { site, durations, extraRecord, delivery } from '../data/site'
+import { site, durations, extraRecord, delivery, features } from '../data/site'
 
 const STORAGE_KEY = 'vox-rental'
 
@@ -65,7 +65,7 @@ export const summary = computed(() => {
   const duration = durations.find((d) => d.id === rental.durationId) ?? durations[0]
   const days = duration.days
   const records = rental.records.map((id) => catalog.records.find((v) => v.id === id)).filter(Boolean)
-  const items = rental.gear.map((id) => catalog.gear.find((g) => g.id === id)).filter(Boolean)
+  const items = features.gear ? rental.gear.map((id) => catalog.gear.find((g) => g.id === id)).filter(Boolean) : []
 
   const extraCount = Math.max(0, records.length - 1)
   const extraRecordsCost = extraCount * (extraRecord.per === 'day' ? extraRecord.price * days : extraRecord.price)
@@ -101,9 +101,9 @@ export function requestMailto() {
       ? s.records.map((r, i) => `  ${i + 1}. ${r.title} — ${r.artist}${i === 0 ? ' (included)' : ' (extra)'}`)
       : ['  (please help me choose)']),
     '',
-    'Add-ons:',
-    ...(s.items.length ? s.items.map((g) => `  - ${g.name}`) : ['  none']),
-    '',
+    ...(features.gear
+      ? ['Add-ons:', ...(s.items.length ? s.items.map((g) => `  - ${g.name}`) : ['  none']), '']
+      : []),
     `Delivery: ${rental.offCampus ? 'Off campus' : 'On campus'}`,
     `Estimated total: ${money(s.total)}${rental.offCampus ? ' (delivery fee to be confirmed)' : ''}`,
     '',
