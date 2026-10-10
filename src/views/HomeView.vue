@@ -51,12 +51,14 @@ const steps = [
     </div>
   </section>
 
-  <!-- Genre marquee -->
-  <div class="marquee" aria-hidden="true">
-    <div class="track">
-      <template v-for="n in 4" :key="n">
-        <span v-for="g in genres" :key="g + n">{{ g }} <i>●</i></span>
-      </template>
+  <!-- Genre marquee (the clip wrapper keeps the tilted strip from making the page wider than the screen) -->
+  <div class="marquee-clip">
+    <div class="marquee" aria-hidden="true">
+      <div class="track">
+        <template v-for="n in 4" :key="n">
+          <span v-for="g in genres" :key="g + n">{{ g }} <i>●</i></span>
+        </template>
+      </div>
     </div>
   </div>
 
@@ -344,6 +346,16 @@ h1 span {
 }
 
 /* Marquee */
+/* The strip is wider than the screen and tilted so its ends never show; this
+   wrapper clips the overflow. Without it, phone browsers widen the whole page
+   to fit the strip and the sticky header no longer reaches the right edge.
+   Vertical padding leaves room for the tilt, cancelled by the negative margin. */
+.marquee-clip {
+  overflow: hidden;
+  padding-block: 24px;
+  margin-block: -24px;
+}
+
 .marquee {
   background: var(--red);
   color: #fff;
