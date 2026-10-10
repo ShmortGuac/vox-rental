@@ -34,6 +34,12 @@ body {
   overflow-x: clip;
 }
 
+/* Page content gets its own stacking layer, so nothing inside it (e.g. the
+   rotated genre strip) can paint over the sticky header */
+main {
+  isolation: isolate;
+}
+
 img,
 svg {
   display: block;

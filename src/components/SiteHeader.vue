@@ -40,8 +40,8 @@ watch(() => route.fullPath, () => (open.value = false))
   position: sticky;
   top: 0;
   z-index: 50;
-  background: color-mix(in srgb, var(--paper) 88%, transparent);
-  backdrop-filter: blur(10px);
+  /* Solid, so the tilted genre strip and covers don't show through when scrolling under it */
+  background: var(--paper);
   border-bottom: 1px solid var(--line);
 }
 

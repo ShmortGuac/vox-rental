@@ -232,8 +232,7 @@ h1 {
   position: sticky;
   top: 72px;
   z-index: 10;
-  background: color-mix(in srgb, var(--paper) 94%, transparent);
-  backdrop-filter: blur(10px);
+  background: var(--paper);
   border-block: 1px solid var(--line);
 }
 
