@@ -35,6 +35,8 @@ No test suite. Verify UI changes with a build and, when visual, a headless Chrom
 | `supabase/seed.sql` | Generated from `src/data/vinyls.js` + `gear.js` |
 | `supabase/functions/cloudinary-sign/` | Edge function; deployed with `verify_jwt = false` (it verifies the user + admin itself — the platform JWT check doesn't work with the new publishable keys) |
 
+Hosted on **Vercel** (vox-rental.vercel.app). `vercel.json` rewrites every path to `/index.html` — required for history-mode routes like `/catalog` to load directly.
+
 `/admin` uses `meta: { bare: true }` so `App.vue` renders it without the shop header/footer/rental panel.
 
 ## Data model (`public.records`)

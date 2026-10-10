@@ -125,4 +125,4 @@ Rental lengths, prices, extra-record price, delivery fees, contact details and t
 
 ## Deploying
 
-Deploy `dist/` to Netlify, Vercel or similar, and add `VITE_SUPABASE_URL` and `VITE_SUPABASE_KEY` as environment variables in the host's settings. Add a rewrite so every path serves `index.html` (needed for `/catalog` to work on refresh).
+Deploy `dist/` to Netlify, Vercel or similar, and add `VITE_SUPABASE_URL` and `VITE_SUPABASE_KEY` as environment variables in the host's settings. Every path must serve `index.html` so links like `/catalog` and `/admin` work when opened directly or refreshed — `vercel.json` already does this on Vercel (on Netlify, add a `_redirects` file with `/* /index.html 200`).
