@@ -1,5 +1,6 @@
 import { computed, reactive, watch } from 'vue'
 import { catalog } from './catalog'
+import { supabase } from '../lib/supabase'
 import { site, pricing, maxDays, delivery, features } from '../data/site'
 
 const STORAGE_KEY = 'vox-rental'
@@ -106,6 +107,42 @@ export const summary = computed(() => {
     hasItems: records.length + items.length > 0 || rental.turntable,
   }
 })
+
+// Requests go into the Supabase `orders` table when Supabase is configured;
+// otherwise the panel falls back to an email (requestMailto).
+export const canSubmitOnline = !!supabase
+
+// Today's date (YYYY-MM-DD) in the visitor's timezone, for the start-date picker
+export function today() {
+  const d = new Date()
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10)
+}
+
+// Sends the rental request. Returns the order number; throws with a readable message.
+export async function submitOrder() {
+  const s = summary.value
+  const d = rental.details
+  const { data, error } = await supabase.rpc('submit_order', {
+    p_name: d.name.trim(),
+    p_phone: d.phone.trim(),
+    p_location: d.location.trim(),
+    p_off_campus: rental.offCampus,
+    p_start_date: d.date,
+    p_days: s.days,
+    p_turntable: rental.turntable,
+    p_record_ids: s.records.map((r) => r.id),
+    p_notes: d.notes.trim() || null,
+    p_estimated_total: s.total,
+  })
+  if (error) throw new Error(error.message || "Couldn't send your request.")
+
+  // Start fresh for next time, but remember who they are
+  rental.records = []
+  rental.gear = []
+  rental.details.date = ''
+  rental.details.notes = ''
+  return data
+}
 
 export function requestMailto() {
   const s = summary.value

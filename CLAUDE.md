@@ -4,7 +4,7 @@ Vue 3 + Vite site for VOX, a campus vinyl rental business. Prices are in **RM**,
 as a package: turntable alone RM35/day, each record RM10/day, or the package (turntable + 1 free record + headphones) RM40/day
 with extra records at RM10/day. Customers with their own turntable can rent records only. Delivery is free on
 campus, paid off campus.
-Rentals are requested by email (mailto) — there is no checkout or rentals table yet.
+Customers send rental requests from the rental panel; they land in the `orders` table and staff manage them on `/admin` → Orders. No online payment — staff confirm and collect payment themselves.
 
 ## Commands
 
@@ -30,9 +30,11 @@ No test suite. Verify UI changes with a build and, when visual, a headless Chrom
 | `src/data/site.js` | Business config: contact, `campusName`, currency (`RM`), `suggestUrl` (Google Form), `features` flags, per-day `pricing` (`turntable`, `record`, `package`), `maxDays`, `delivery` fees, FAQ (prices interpolated from `pricing`) |
 | `src/data/vinyls.js`, `gear.js` | Sample data in **DB row shape** — fallback only; also the source for `supabase/seed.sql` |
 | `src/stores/catalog.js` | Loads records/gear (Supabase or samples), `toRecord()` maps DB rows → component shape, `normalizeSetlist()`, `genres`, `genreLabel()`, `reloadCatalog()` |
-| `src/stores/rental.js` | The visitor's rental (localStorage: `records`, `turntable` on/off, `days`, delivery, details), price `summary` (applies the package automatically when there's a turntable + ≥1 record), `requestMailto()` |
+| `src/stores/rental.js` | The visitor's rental (localStorage: `records`, `turntable` on/off, `days`, delivery, details), price `summary` (applies the package automatically when there's a turntable + ≥1 record), `submitOrder()` (calls the `submit_order` RPC), `requestMailto()` (fallback only when Supabase isn't configured) |
 | `src/lib/cloudinary.js` | `optimizeImage()` (adds `f_auto,q_auto,c_fill,w_N` to Cloudinary URLs), `uploadImage()` |
-| `src/views/AdminView.vue` + `src/components/admin/AdminRecordForm.vue` | `/admin` — sign-in, record list, add/edit form (setlist editor, genre tags, cover upload) |
+| `src/views/AdminView.vue` | `/admin` — sign-in + admin check, then two tabs: **Orders** and **Records** (tab remembered in localStorage) |
+| `src/components/admin/AdminOrders.vue` | Orders dashboard: filter by status, search, status select, call/WhatsApp links, delivery-fee input for off-campus, staff notes, overdue/starts-today flags, double-booking warnings; refreshes on tab focus + every minute |
+| `src/components/admin/AdminRecordForm.vue` | Record add/edit form (setlist editor, genre tags, cover upload) |
 | `supabase/schema.sql` | Full schema for a fresh project (tables, enum, checks, RLS, admins) — keep in sync with migrations |
 | `supabase/seed.sql` | Generated from `src/data/vinyls.js` + `gear.js` |
 | `supabase/functions/cloudinary-sign/` | Edge function; deployed with `verify_jwt = false` (it verifies the user + admin itself — the platform JWT check doesn't work with the new publishable keys) |
@@ -50,6 +52,13 @@ Hosted on **Vercel** (vox-rental.vercel.app). `vercel.json` rewrites every path 
 - `description` = the **VOX review** (blank line = new paragraph); `reviewer` → signed "— Name from the VOX Crew", empty → "— The VOX Crew"
 - `cover_url` (Cloudinary), `year`, `format` (check: LP, 2xLP, 3xLP, EP, 7", 10", 12")
 - No `condition` column (removed on purpose).
+
+## Orders (`public.orders`)
+
+- Created **only** through `public.submit_order(...)` (security definer RPC, callable by `anon`). It validates input, rejects records that aren't `Available`, rate-limits to 5 requests/phone/hour, and snapshots record `{id, title, artist}` into `records jsonb` from the catalog (never trusts titles from the browser). Supabase's advisor flags this function as anon-executable — that's intentional.
+- Customers can't read orders; only admins can select/update/delete (RLS via `private.is_admin()`). No insert policy.
+- `status` enum `order_status`: `Pending` → `Confirmed` → `Active` → `Returned` (or `Cancelled`). Trigger `sync_order_records`: → `Active` sets the order's records to `In Rent`; leaving `Active` sets them back to `Available`.
+- Rental period: delivered on `start_date`, collected `start_date + days`. `estimated_total` comes from the site (excludes off-campus delivery); staff enter `delivery_fee` for off-campus orders; `admin_notes` is for staff.
 
 `public.gear` exists but is unused while `features.gear` is `false` in `site.js` (all gear UI is behind that flag).
 

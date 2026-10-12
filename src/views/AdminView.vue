@@ -5,6 +5,7 @@ import { reloadCatalog } from '../stores/catalog'
 import { optimizeImage } from '../lib/cloudinary'
 import VoxLogo from '../components/VoxLogo.vue'
 import AdminRecordForm from '../components/admin/AdminRecordForm.vue'
+import AdminOrders from '../components/admin/AdminOrders.vue'
 
 const STATUSES = ['Available', 'In Rent', 'Coming Soon']
 
@@ -17,6 +18,28 @@ const email = ref('')
 const password = ref('')
 const signingIn = ref(false)
 const authError = ref('')
+
+// Which admin section is showing (remembered for the next visit)
+const TAB_KEY = 'vox-admin-tab'
+const tab = ref(readTab())
+
+function readTab() {
+  try {
+    return localStorage.getItem(TAB_KEY) === 'records' ? 'records' : 'orders'
+  } catch {
+    return 'orders'
+  }
+}
+
+function setTab(t) {
+  tab.value = t
+  editing.value = undefined
+  try {
+    localStorage.setItem(TAB_KEY, t)
+  } catch {
+    /* not remembered */
+  }
+}
 
 // Records
 const records = ref([])
@@ -211,8 +234,23 @@ onUnmounted(() => {
 
       <!-- Admin -->
       <template v-else>
+        <nav v-if="editing === undefined" class="tabs" aria-label="Admin sections">
+          <button :class="{ active: tab === 'orders' }" :aria-current="tab === 'orders' ? 'page' : undefined" @click="setTab('orders')">
+            Orders
+          </button>
+          <button :class="{ active: tab === 'records' }" :aria-current="tab === 'records' ? 'page' : undefined" @click="setTab('records')">
+            Records
+          </button>
+        </nav>
+
+        <AdminOrders
+          v-if="tab === 'orders'"
+          @notify="notify"
+          @records-changed="loadRecords(); reloadCatalog()"
+        />
+
         <AdminRecordForm
-          v-if="editing !== undefined"
+          v-else-if="editing !== undefined"
           :key="editing?.id ?? 'new'"
           :record="editing"
           :genres="genres"
@@ -425,6 +463,31 @@ code {
   color: var(--red-dark);
   font-size: 14px;
   font-weight: 600;
+}
+
+/* Section tabs */
+.tabs {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 28px;
+  border-radius: 999px;
+  background: var(--card);
+  border: 1.5px solid var(--line);
+}
+
+.tabs button {
+  padding: 8px 20px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.tabs button.active {
+  background: var(--ink);
+  color: var(--paper);
 }
 
 /* List */

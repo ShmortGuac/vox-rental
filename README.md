@@ -69,6 +69,23 @@ Recommended: turn off public sign-ups in **Authentication → Sign In / Provider
 
 To remove someone: `delete from public.admins where user_id = (select id from auth.users where email = 'them@example.com');`
 
+## Orders
+
+When a customer presses **Send rental request**, the request is saved to the `orders` table and they see an
+order number. Sign in at `/admin` → **Orders** to see them:
+
+- **Open** shows everything still in progress (Pending, Confirmed, Active), soonest first.
+- Change an order's status as it moves along: **Pending** (new) → **Confirmed** (agreed with the customer) →
+  **Active** (delivered) → **Returned**. Setting **Active** marks its records *In Rent* on the site; **Returned**
+  or **Cancelled** puts them back to *Available*.
+- Tap the phone number to call, or **WhatsApp** to message the customer.
+- Off-campus orders have a box for the delivery fee you quote; the total updates once it's filled in.
+- Flags warn you when an order is overdue, starts today, or wants a record that's in another order for the same dates.
+- Staff notes (paid, deposit, who's delivering…) save when you click out of the box.
+
+Customers can't see or change orders, and the site limits each phone number to 5 requests an hour.
+The page refreshes itself every minute and whenever you come back to the tab.
+
 ## Managing the catalog
 
 Records can be edited on the admin page or directly in the Supabase **Table Editor** — no code changes or redeploys needed.

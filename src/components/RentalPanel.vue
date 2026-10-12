@@ -3,16 +3,44 @@ import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import GearIcon from './GearIcon.vue'
 import { pricing, maxDays, delivery, features } from '../data/site'
-import { rental, summary, clampDays, toggleRecord, toggleGear, gearCost, money, requestMailto } from '../stores/rental'
+import {
+  rental, summary, clampDays, toggleRecord, toggleGear, gearCost, money, requestMailto, canSubmitOnline, submitOrder, today,
+} from '../stores/rental'
 
 const route = useRoute()
 const panel = ref(null)
 
 const mailto = computed(() => requestMailto())
-const canSend = computed(() => summary.value.hasItems && rental.details.name.trim() && rental.details.phone.trim() && rental.details.location.trim())
+const canSend = computed(
+  () =>
+    summary.value.hasItems &&
+    rental.details.name.trim() &&
+    rental.details.phone.trim() &&
+    rental.details.location.trim() &&
+    rental.details.date >= today(),
+)
+
+const sending = ref(false)
+const sendError = ref('')
+const sentId = ref(null) // order number once the request is in
+
+async function send() {
+  if (!canSend.value || sending.value) return
+  sending.value = true
+  sendError.value = ''
+  try {
+    sentId.value = await submitOrder()
+  } catch (e) {
+    sendError.value = e.message
+  } finally {
+    sending.value = false
+  }
+}
 
 function close() {
   rental.panelOpen = false
+  sentId.value = null
+  sendError.value = ''
 }
 
 function onKey(e) {
@@ -64,7 +92,19 @@ onUnmounted(() => document.removeEventListener('keydown', onKey))
             <button class="close" aria-label="Close" @click="close">×</button>
           </header>
 
-          <div class="drawer-body">
+          <!-- Request sent -->
+          <div v-if="sentId" class="drawer-body done" role="status">
+            <span class="done-disc" aria-hidden="true" />
+            <h3 class="done-title">Request sent!</h3>
+            <p class="done-ref">Order <strong>#{{ sentId }}</strong></p>
+            <p>
+              Thanks, {{ rental.details.name.split(' ')[0] }}. We'll contact you on <strong class="nowrap">{{ rental.details.phone }}</strong>
+              to confirm your rental{{ rental.offCampus ? ' and quote the delivery fee' : '' }}.
+            </p>
+            <button class="btn btn--ghost" @click="close">Done</button>
+          </div>
+
+          <div v-else class="drawer-body">
             <!-- Turntable -->
             <section>
               <h3>Turntable</h3>
@@ -177,13 +217,13 @@ onUnmounted(() => document.removeEventListener('keydown', onKey))
                   {{ rental.offCampus ? 'Delivery address' : 'Where on campus? (hall, room, building)' }}
                   <input v-model="rental.details.location" />
                 </label>
-                <label>Start date<input v-model="rental.details.date" type="date" /></label>
+                <label>Start date<input v-model="rental.details.date" type="date" :min="today()" required /></label>
                 <label class="wide">Notes (optional)<input v-model="rental.details.notes" /></label>
               </div>
             </section>
           </div>
 
-          <footer class="drawer-foot">
+          <footer v-if="!sentId" class="drawer-foot">
             <dl class="totals">
               <div v-for="l in summary.lines" :key="l.label">
                 <dt>{{ l.label }} <small>{{ money(l.perDay) }} × {{ summary.days }}</small></dt>
@@ -193,11 +233,15 @@ onUnmounted(() => document.removeEventListener('keydown', onKey))
               <div><dt>Delivery</dt><dd>{{ rental.offCampus ? 'Quoted by location' : 'Free' }}</dd></div>
               <div class="grand"><dt>Estimated total</dt><dd>{{ money(summary.total) }}<small v-if="rental.offCampus"> + delivery</small></dd></div>
             </dl>
-            <a class="btn btn--red send" :href="mailto" :aria-disabled="!canSend">Send rental request</a>
-            <p class="foot-note">
+            <button v-if="canSubmitOnline" class="btn btn--red send" :disabled="!canSend || sending" @click="send">
+              {{ sending ? 'Sending…' : 'Send rental request' }}
+            </button>
+            <a v-else class="btn btn--red send" :href="mailto" :aria-disabled="!canSend">Send rental request</a>
+            <p v-if="sendError" class="send-error" role="alert">{{ sendError }}</p>
+            <p v-else class="foot-note">
               <template v-if="!summary.hasItems">Pick a record or rent a turntable to send a request.</template>
-              <template v-else-if="canSend">Opens your email with everything filled in. We'll confirm availability and the final price.</template>
-              <template v-else>Fill in your name, phone and location to send.</template>
+              <template v-else-if="canSend">We'll confirm availability and the final price with you before anything's due.</template>
+              <template v-else>Fill in your name, phone, location and start date to send.</template>
             </p>
           </footer>
         </aside>
@@ -659,6 +703,75 @@ img.swatch {
 .send {
   width: 100%;
   justify-content: center;
+}
+
+.send:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.send-error {
+  margin-top: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--red-dark);
+  text-align: center;
+}
+
+/* Request sent */
+.done {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  text-align: center;
+  padding-bottom: 64px;
+}
+
+.done-disc {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  margin-bottom: 8px;
+  background:
+    radial-gradient(circle, var(--paper) 0 6%, var(--red) 6.5% 30%, transparent 31%),
+    repeating-radial-gradient(circle, #2a2a2a 0 1.5px, #1a1a1a 1.5px 3px);
+  animation: spin 2.4s linear infinite;
+}
+
+.done h3.done-title {
+  font-family: var(--font);
+  font-size: 32px;
+  font-weight: 850;
+  font-stretch: 112%;
+  text-transform: none;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  margin: 0;
+}
+
+.done h3.done-title::before {
+  content: none;
+}
+
+.done-ref {
+  font-family: var(--mono);
+  font-size: 15px;
+}
+
+.done p {
+  max-width: 34ch;
+  color: var(--muted);
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.done .btn {
+  margin-top: 12px;
 }
 
 .foot-note {

@@ -2,7 +2,7 @@
 export const site = {
   name: 'VOX',
   tagline: 'Vinyl, on rotation.',
-  campusName: 'Your University',
+  campusName: 'IIUM',
   email: 'hello@vox-records.com',
   phone: '+00 000 000 0000',
   instagram: '@vox.records',
