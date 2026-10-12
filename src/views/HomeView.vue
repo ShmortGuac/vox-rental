@@ -11,6 +11,13 @@ import { money, rental } from '../stores/rental'
 const featured = computed(() => catalog.records.filter((v) => v.available).slice(0, 4))
 const featuredGear = computed(() => catalog.gear.filter((g) => g.available).slice(0, 3))
 const selected = ref(null)
+const openFaqs = ref(new Set())
+
+function toggleFaq(i) {
+  const next = new Set(openFaqs.value)
+  next.has(i) ? next.delete(i) : next.add(i)
+  openFaqs.value = next
+}
 const router = useRouter()
 
 const plans = [
@@ -203,10 +210,19 @@ const steps = [
       <h2>Good questions.</h2>
     </div>
     <div class="faq">
-      <details v-for="f in faqs" :key="f.q">
-        <summary>{{ f.q }}</summary>
-        <p>{{ f.a }}</p>
-      </details>
+      <div v-for="(f, i) in faqs" :key="f.q" class="faq-item" :class="{ open: openFaqs.has(i) }">
+        <h3>
+          <button :id="`faq-q-${i}`" class="faq-q" :aria-expanded="openFaqs.has(i)" :aria-controls="`faq-a-${i}`" @click="toggleFaq(i)">
+            {{ f.q }}
+          </button>
+        </h3>
+        <!-- Animates height via grid rows 0fr → 1fr, so it works for any answer length -->
+        <div :id="`faq-a-${i}`" class="faq-a" role="region" :aria-labelledby="`faq-q-${i}`" :inert="!openFaqs.has(i)">
+          <div class="faq-a-inner">
+            <p>{{ f.a }}</p>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -687,24 +703,36 @@ h2 {
   gap: 56px;
 }
 
-.faq details {
+.faq-item {
   border-bottom: 1.5px solid var(--line);
 }
 
-.faq summary {
-  list-style: none;
+.faq h3 {
+  font-size: inherit;
+  font-stretch: 100%;
+  letter-spacing: 0;
+  line-height: inherit;
+}
+
+.faq-q {
+  all: unset;
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
   cursor: pointer;
   padding: 22px 40px 22px 0;
   font-size: 20px;
   font-weight: 700;
+  line-height: 1.3;
   position: relative;
 }
 
-.faq summary::-webkit-details-marker {
-  display: none;
+.faq-q:focus-visible {
+  outline: 3px solid var(--red);
+  outline-offset: 3px;
 }
 
-.faq summary::after {
+.faq-q::after {
   content: '+';
   position: absolute;
   right: 4px;
@@ -713,14 +741,30 @@ h2 {
   font-size: 28px;
   font-weight: 400;
   color: var(--red);
-  transition: transform 0.2s ease;
+  transition: transform 0.3s ease;
 }
 
-.faq details[open] summary::after {
+.faq-item.open .faq-q::after {
   transform: translateY(-50%) rotate(45deg);
 }
 
-.faq details p {
+.faq-a {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.25s ease;
+}
+
+.faq-item.open .faq-a {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.faq-a-inner {
+  overflow: hidden;
+}
+
+.faq-a p {
   padding-bottom: 22px;
   color: #3a3631;
   max-width: 60ch;
