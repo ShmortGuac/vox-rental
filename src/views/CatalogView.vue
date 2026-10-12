@@ -497,13 +497,21 @@ h1 {
     gap: 16px;
   }
   .toolbar {
-    grid-template-columns: 1fr;
+    /* minmax(0, …) so the controls can't stretch the column past the screen edge */
+    grid-template-columns: minmax(0, 1fr);
   }
   .search {
     max-width: none;
   }
   .controls {
     justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px 16px;
+    min-width: 0;
+  }
+  .sort select {
+    min-width: 0;
+    max-width: 100%;
   }
   .grid {
     grid-template-columns: repeat(2, 1fr);
