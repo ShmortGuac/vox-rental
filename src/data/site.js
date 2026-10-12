@@ -19,12 +19,12 @@ export const features = {
 }
 
 // Everything is priced per day. Customers can rent à la carte (a turntable, or
-// records on their own if they have a turntable) or take the package, which is
-// a turntable + 1 record for less than the two separately.
+// records on their own if they have a turntable) or take the package: a turntable,
+// 1 free record and a pair of headphones.
 export const pricing = {
   turntable: 35, // turntable on its own, per day
   record: 10, // each record, per day (also the price of each record beyond the package's one)
-  package: 40, // turntable + 1 record, per day
+  package: 40, // turntable + 1 free record + headphones, per day
 }
 
 // Longest rental that can be requested from the site (customers can ask to extend).
@@ -41,7 +41,7 @@ const price = (n) => `${site.currency}${n}`
 export const faqs = [
   {
     q: 'How does pricing work?',
-    a: `Everything is per day. The package — a turntable and one record of your choice — is ${price(pricing.package)}/day. Each extra record is ${price(pricing.record)}/day. You can also rent just a turntable (${price(pricing.turntable)}/day) or just records (${price(pricing.record)}/day each).`,
+    a: `Everything is per day. The package — a turntable, one free record of your choice and headphones — is ${price(pricing.package)}/day. Each extra record is ${price(pricing.record)}/day. Headphones come with the package only. You can also rent just a turntable (${price(pricing.turntable)}/day) or just records (${price(pricing.record)}/day each).`,
   },
   {
     q: 'Do I need my own turntable?',

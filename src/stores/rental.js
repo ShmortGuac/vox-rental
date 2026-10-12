@@ -69,7 +69,7 @@ export const money = (n) => `${site.currency}${n}`
 const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`
 
 // Per-day price lines. With a turntable and at least one record, the first
-// record goes into the package (cheaper than turntable + record separately).
+// record goes into the package (turntable + 1 free record + headphones).
 export const summary = computed(() => {
   const days = rental.days
   const records = rental.records.map((id) => catalog.records.find((v) => v.id === id)).filter(Boolean)
@@ -79,7 +79,7 @@ export const summary = computed(() => {
   const looseRecords = usePackage ? records.length - 1 : records.length
 
   const lines = []
-  if (usePackage) lines.push({ label: 'Package — turntable + 1 record', perDay: pricing.package })
+  if (usePackage) lines.push({ label: 'Package — turntable + 1 free record + headphones', perDay: pricing.package })
   else if (rental.turntable) lines.push({ label: 'Turntable', perDay: pricing.turntable })
   if (looseRecords) {
     lines.push({ label: usePackage ? plural(looseRecords, 'extra record') : plural(looseRecords, 'record'), perDay: looseRecords * pricing.record })
@@ -98,8 +98,6 @@ export const summary = computed(() => {
     usePackage,
     lines,
     perDay,
-    // What the package saves per day versus renting the turntable and record separately
-    packageSaving: usePackage ? pricing.turntable + pricing.record - pricing.package : 0,
     gearTotal,
     deliveryFee,
     total: perDay * days + gearTotal + deliveryFee,
@@ -118,11 +116,11 @@ export function requestMailto() {
     "I'd like to book a rental:",
     '',
     `Rental length: ${plural(s.days, 'day')}`,
-    `Turntable: ${rental.turntable ? 'Yes' : 'No — I have my own'}`,
+    `Turntable: ${rental.turntable ? (s.usePackage ? 'Yes — package with headphones' : 'Yes') : 'No — I have my own'}`,
     '',
     'Records:',
     ...(s.records.length
-      ? s.records.map((r, i) => `  ${i + 1}. ${r.title} — ${r.artist}${s.usePackage && i === 0 ? ' (package)' : ''}`)
+      ? s.records.map((r, i) => `  ${i + 1}. ${r.title} — ${r.artist}${s.usePackage && i === 0 ? ' (free with the package)' : ''}`)
       : [rental.turntable ? '  none — turntable only' : '  (please help me choose)']),
     '',
     ...(features.gear

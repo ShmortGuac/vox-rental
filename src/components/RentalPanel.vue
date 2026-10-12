@@ -71,7 +71,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKey))
               <div class="seg">
                 <button :class="{ active: rental.turntable }" :aria-pressed="rental.turntable" @click="rental.turntable = true">
                   <strong>Rent one</strong>
-                  <span>{{ money(pricing.package) }}/day with a record</span>
+                  <span>{{ money(pricing.package) }}/day with a free record + headphones</span>
                 </button>
                 <button :class="{ active: !rental.turntable }" :aria-pressed="!rental.turntable" @click="rental.turntable = false">
                   <strong>I have my own</strong>
@@ -81,9 +81,9 @@ onUnmounted(() => document.removeEventListener('keydown', onKey))
               <p class="note">
                 <template v-if="!rental.turntable">Each record is {{ money(pricing.record) }}/day.</template>
                 <template v-else-if="summary.usePackage">
-                  Package price — saves you {{ money(summary.packageSaving) }}/day versus renting the turntable and record separately.
+                  Package — turntable, your first record free and headphones, {{ money(pricing.package) }}/day.
                 </template>
-                <template v-else>Turntable on its own is {{ money(pricing.turntable) }}/day. Add a record to get the package price.</template>
+                <template v-else>Turntable on its own is {{ money(pricing.turntable) }}/day, without headphones. Add a record to get the package — your first record is free and headphones are included.</template>
               </p>
             </section>
 
@@ -122,13 +122,13 @@ onUnmounted(() => document.removeEventListener('keydown', onKey))
                     <small>{{ r.artist }}</small>
                   </span>
                   <span class="line-price">
-                    {{ summary.usePackage && i === 0 ? 'In package' : `${money(pricing.record)}/day` }}
+                    {{ summary.usePackage && i === 0 ? 'Free' : `${money(pricing.record)}/day` }}
                   </span>
                   <button class="remove" :aria-label="`Remove ${r.title}`" @click="toggleRecord(r.id)">×</button>
                 </li>
               </ul>
               <p v-else class="empty">
-                {{ rental.turntable ? 'No records yet — add one to get the package price.' : 'No records picked yet.' }}
+                {{ rental.turntable ? 'No records yet — your first one is free with the package.' : 'No records picked yet.' }}
               </p>
               <RouterLink to="/catalog" class="link">Browse records →</RouterLink>
             </section>

@@ -102,7 +102,7 @@ onUnmounted(() => {
             </a>
           </div>
           <p class="hint">
-            With a turntable it's {{ money(pricing.package) }}/day for the pair. Each extra record — or a record on
+            Rent a turntable and your first record is free, with headphones — {{ money(pricing.package) }}/day. Each extra record — or a record on
             its own — is {{ money(pricing.record) }}/day.
           </p>
         </div>

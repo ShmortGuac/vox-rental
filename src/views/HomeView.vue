@@ -18,15 +18,15 @@ const plans = [
     title: 'Turntable',
     price: pricing.turntable,
     per: 'per day',
-    blurb: 'Just the deck — for when you already have records to spin.',
+    blurb: 'Just the deck, for when you already have records to spin. Headphones come with the package only.',
     cta: 'Rent a turntable',
     turntable: true,
   },
   {
     title: 'The Package',
     price: pricing.package,
-    per: 'per day · turntable + 1 record',
-    blurb: `Everything you need to start listening, ${money(pricing.turntable + pricing.record - pricing.package)} less than renting them separately.`,
+    per: 'per day · turntable + 1 free record + headphones',
+    blurb: 'Everything you need to start listening — your first record is free and headphones are included.',
     cta: 'Pick your record',
     turntable: true,
     featured: true,
@@ -50,7 +50,7 @@ function choosePlan(plan) {
 }
 
 const steps = [
-  { n: '01', title: 'Pick a record', text: "Choose a record from the catalog. With a turntable it's a package deal. Want more than one? Add as many as you like." },
+  { n: '01', title: 'Pick a record', text: "Choose a record from the catalog. Rent a turntable and your first record is free. Want more than one? Add as many as you like." },
   { n: '02', title: 'Choose how long', text: 'Pay by the day — rent for one night or a couple of weeks. You only pay for the days you have it.' },
   { n: '03', title: 'We deliver & set up', text: "We bring everything to you free anywhere on campus, set it up, and collect it when you're done. Off campus? We deliver for a fee." },
 ]
@@ -72,7 +72,7 @@ const steps = [
           <a href="#pricing" class="btn btn--ghost">See pricing</a>
         </div>
         <ul class="stats">
-          <li><strong>{{ money(pricing.package) }}</strong><span>turntable + record, per day</span></li>
+          <li><strong>{{ money(pricing.package) }}</strong><span>turntable, record & headphones, per day</span></li>
           <li><strong>{{ catalog.records.length }}+</strong><span>records to choose from</span></li>
           <li><strong>Free</strong><span>campus delivery</span></li>
         </ul>
@@ -213,7 +213,7 @@ const steps = [
   <!-- CTA -->
   <section class="wrap">
     <div class="cta-band">
-      <h2>A turntable and a record at your door for {{ money(pricing.package) }} a day.</h2>
+      <h2>A turntable, a record and headphones at your door for {{ money(pricing.package) }} a day.</h2>
       <RouterLink to="/catalog" class="btn">Start digging →</RouterLink>
     </div>
   </section>

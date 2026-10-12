@@ -1,7 +1,7 @@
 # VOX — vinyl rental site
 
 Vue 3 + Vite site for VOX, a campus vinyl rental business. Prices are in **RM**, **per day**, à la carte or
-as a package: turntable alone RM35/day, each record RM10/day, or the package (turntable + 1 record) RM40/day
+as a package: turntable alone RM35/day, each record RM10/day, or the package (turntable + 1 free record + headphones) RM40/day
 with extra records at RM10/day. Customers with their own turntable can rent records only. Delivery is free on
 campus, paid off campus.
 Rentals are requested by email (mailto) — there is no checkout or rentals table yet.
