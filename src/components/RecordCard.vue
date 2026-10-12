@@ -25,7 +25,8 @@ const statusClass = { Available: 'in', 'In Rent': 'out', 'Coming Soon': 'soon' }
       <div class="meta">
         <div class="row">
           <span class="genre" :title="[genreLabel(record), record.year].filter(Boolean).join(' · ')">
-            <span class="genre-name">{{ genreLabel(record) }}</span><span v-if="record.year">{{ record.genres.length ? ' · ' : '' }}{{ record.year }}</span>
+            <span v-if="record.genres.length" class="genre-name">{{ genreLabel(record) }}</span>
+            <span v-if="record.year" class="year">{{ record.year }}</span>
           </span>
           <span class="status" :class="statusClass[record.status]">{{ record.status }}</span>
         </div>
@@ -106,6 +107,15 @@ const statusClass = { Available: 'in', 'In Rent': 'out', 'Coming Soon': 'soon' }
   text-overflow: ellipsis;
 }
 
+.genre-name + .year::before {
+  content: ' · ';
+  white-space: pre;
+}
+
+.year {
+  flex: none;
+}
+
 .status {
   flex: none;
   font-family: var(--mono);
@@ -178,5 +188,25 @@ h3 {
   border-color: var(--line);
   color: var(--muted);
   cursor: not-allowed;
+}
+
+/* Phones: cards are too narrow for genre, year and status on one line, so stack them */
+@media (max-width: 640px) {
+  .row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    margin-bottom: 8px;
+  }
+  .genre {
+    flex-direction: column;
+    max-width: 100%;
+  }
+  .genre-name + .year::before {
+    content: none;
+  }
+  .status {
+    margin-top: 2px;
+  }
 }
 </style>
