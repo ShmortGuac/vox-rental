@@ -5,7 +5,7 @@ import RecordCard from '../components/RecordCard.vue'
 import RecordModal from '../components/RecordModal.vue'
 import GearCard from '../components/GearCard.vue'
 import { catalog, genres } from '../stores/catalog'
-import { extraRecord, features, site } from '../data/site'
+import { pricing, features, site } from '../data/site'
 import { money } from '../stores/rental'
 
 const route = useRoute()
@@ -66,7 +66,7 @@ function reset() {
       <h1 v-if="features.gear">Records<br />& gear.</h1>
       <h1 v-else>Every record<br />we've got.</h1>
       <p class="sub">
-        Your first record comes with the turntable. Each extra record is +{{ money(extraRecord.price) }}/{{ extraRecord.per }}.
+        Turntable + 1 record is {{ money(pricing.package) }}/day. Each extra record — or records on their own — {{ money(pricing.record) }}/day.
       </p>
       <div v-if="features.gear" class="tabs" role="tablist">
         <button role="tab" :aria-selected="tab === 'records'" :class="{ active: tab === 'records' }" @click="tab = ''">

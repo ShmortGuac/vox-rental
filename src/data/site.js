@@ -7,7 +7,7 @@ export const site = {
   phone: '+00 000 000 0000',
   instagram: '@vox.records',
   hours: 'Mon – Sun, 10am – 10pm',
-  currency: '$',
+  currency: 'RM',
   // Google Form where visitors can suggest records to stock
   suggestUrl: 'https://forms.gle/GhyToP6gWuQRUSSp9',
 }
@@ -18,34 +18,38 @@ export const features = {
   gear: false,
 }
 
-// Every rental includes a turntable + one record of the customer's choice.
-// `price` is the total for that length of rental.
-export const durations = [
-  { id: '1d', label: '1 Day', days: 1, price: 12, blurb: 'A listening night in.' },
-  { id: '3d', label: '3 Days', days: 3, price: 30, blurb: 'A long weekend of records.', featured: true },
-  { id: '7d', label: '1 Week', days: 7, price: 55, blurb: 'Live with an album properly.' },
-]
+// Everything is priced per day. Customers can rent à la carte (a turntable, or
+// records on their own if they have a turntable) or take the package, which is
+// a turntable + 1 record for less than the two separately.
+export const pricing = {
+  turntable: 35, // turntable on its own, per day
+  record: 10, // each record, per day (also the price of each record beyond the package's one)
+  package: 40, // turntable + 1 record, per day
+}
 
-// Each record beyond the first one included in the rental.
-export const extraRecord = { price: 3, per: 'day' }
+// Longest rental that can be requested from the site (customers can ask to extend).
+export const maxDays = 14
 
 export const delivery = {
   campus: { label: 'On campus', fee: 0, note: 'Free delivery, setup and pickup anywhere on campus.' },
-  offCampus: { label: 'Off campus', fee: 8, note: 'Delivery fee depends on distance. We\'ll confirm the exact fee before your rental.' },
+  // No fixed fee off campus: it depends on where the customer is, so it's quoted when confirming the rental.
+  offCampus: { label: 'Off campus', note: 'The delivery fee depends on where you are. We\'ll quote it when we confirm your rental.' },
 }
+
+const price = (n) => `${site.currency}${n}`
 
 export const faqs = [
   {
-    q: 'What do I get with a rental?',
-    a: 'A turntable and one record of your choice, delivered and set up for you. Want more than one record? Add extras for a small fee.',
+    q: 'How does pricing work?',
+    a: `Everything is per day. The package — a turntable and one record of your choice — is ${price(pricing.package)}/day. Each extra record is ${price(pricing.record)}/day. You can also rent just a turntable (${price(pricing.turntable)}/day) or just records (${price(pricing.record)}/day each).`,
   },
   {
     q: 'Do I need my own turntable?',
-    a: 'Nope. Every rental comes with a turntable — that\'s the whole point.',
+    a: `Nope — rent one with the package. Already have a turntable? Rent records on their own for ${price(pricing.record)}/day each.`,
   },
   {
     q: 'Do you deliver off campus?',
-    a: 'Yes. On-campus delivery is free; off campus we charge a delivery fee based on distance, which we\'ll confirm before your rental starts.',
+    a: 'Yes. On-campus delivery is free; off campus the delivery fee depends on where you are, and we\'ll quote it before your rental starts.',
   },
   {
     q: 'What if something gets damaged?',

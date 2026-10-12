@@ -2,7 +2,7 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import RecordArt from './RecordArt.vue'
 import { genreLabel } from '../stores/catalog'
-import { site, extraRecord } from '../data/site'
+import { site, pricing } from '../data/site'
 import { hasRecord, toggleRecord, money, rental } from '../stores/rental'
 
 const props = defineProps({
@@ -102,8 +102,8 @@ onUnmounted(() => {
             </a>
           </div>
           <p class="hint">
-            Your first record comes free with the turntable. Each extra record is
-            +{{ money(extraRecord.price) }}/{{ extraRecord.per }}.
+            With a turntable it's {{ money(pricing.package) }}/day for the pair. Each extra record — or a record on
+            its own — is {{ money(pricing.record) }}/day.
           </p>
         </div>
         </div>

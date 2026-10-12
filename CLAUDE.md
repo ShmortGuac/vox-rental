@@ -1,7 +1,9 @@
 # VOX — vinyl rental site
 
-Vue 3 + Vite site for VOX, a campus vinyl rental business. A rental = a turntable + 1 record for a set
-length of time; extra records (and, later, gear) cost extra. Delivery is free on campus, paid off campus.
+Vue 3 + Vite site for VOX, a campus vinyl rental business. Prices are in **RM**, **per day**, à la carte or
+as a package: turntable alone RM35/day, each record RM10/day, or the package (turntable + 1 record) RM40/day
+with extra records at RM10/day. Customers with their own turntable can rent records only. Delivery is free on
+campus, paid off campus.
 Rentals are requested by email (mailto) — there is no checkout or rentals table yet.
 
 ## Commands
@@ -25,10 +27,10 @@ No test suite. Verify UI changes with a build and, when visual, a headless Chrom
 
 | Path | What |
 |---|---|
-| `src/data/site.js` | Business config: contact, `campusName`, currency, `suggestUrl` (Google Form), `features` flags, rental `durations`, `extraRecord` price, `delivery` fees, FAQ |
+| `src/data/site.js` | Business config: contact, `campusName`, currency (`RM`), `suggestUrl` (Google Form), `features` flags, per-day `pricing` (`turntable`, `record`, `package`), `maxDays`, `delivery` fees, FAQ (prices interpolated from `pricing`) |
 | `src/data/vinyls.js`, `gear.js` | Sample data in **DB row shape** — fallback only; also the source for `supabase/seed.sql` |
 | `src/stores/catalog.js` | Loads records/gear (Supabase or samples), `toRecord()` maps DB rows → component shape, `normalizeSetlist()`, `genres`, `genreLabel()`, `reloadCatalog()` |
-| `src/stores/rental.js` | The visitor's rental (localStorage), price `summary`, `requestMailto()` |
+| `src/stores/rental.js` | The visitor's rental (localStorage: `records`, `turntable` on/off, `days`, delivery, details), price `summary` (applies the package automatically when there's a turntable + ≥1 record), `requestMailto()` |
 | `src/lib/cloudinary.js` | `optimizeImage()` (adds `f_auto,q_auto,c_fill,w_N` to Cloudinary URLs), `uploadImage()` |
 | `src/views/AdminView.vue` + `src/components/admin/AdminRecordForm.vue` | `/admin` — sign-in, record list, add/edit form (setlist editor, genre tags, cover upload) |
 | `supabase/schema.sql` | Full schema for a fresh project (tables, enum, checks, RLS, admins) — keep in sync with migrations |
@@ -65,5 +67,5 @@ Hosted on **Vercel** (vox-rental.vercel.app). `vercel.json` rewrites every path 
 - Status/format values in `AdminRecordForm.vue` must match the DB enum/check constraint.
 - Layout details that were deliberately fixed: record cards fill the grid row with the "Add to rental" button pinned to the bottom (`margin-top: auto`); cards have `min-width: 0` so one-line genre text truncates instead of widening the grid; the hover disc slide is small (6%, 3% on phones) so it doesn't touch the next card; the "Coming soon" banner is a separate layer so the cover's grayscale filter doesn't affect it.
 - Scoped CSS class names have collided before (e.g. `.empty`) — pick specific names.
-- Pricing/contact/campus values in `site.js` are still placeholders until the owner confirms them.
+- Pricing in `site.js` is confirmed by the owner (RM35 / RM10 / RM40 per day). Off-campus delivery has no set fee — it depends on location, so it's quoted per rental and left out of the estimated total. Contact and campus name are still placeholders.
 - Commit/push only when asked. Never commit `.env` or paste keys/tokens into files.

@@ -1,19 +1,57 @@
 <script setup>
 import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import RecordCard from '../components/RecordCard.vue'
 import RecordModal from '../components/RecordModal.vue'
 import GearCard from '../components/GearCard.vue'
 import { catalog, genres } from '../stores/catalog'
-import { site, durations, extraRecord, delivery, faqs, features } from '../data/site'
-import { money } from '../stores/rental'
+import { site, pricing, delivery, faqs, features } from '../data/site'
+import { money, rental } from '../stores/rental'
 
 const featured = computed(() => catalog.records.filter((v) => v.available).slice(0, 4))
 const featuredGear = computed(() => catalog.gear.filter((g) => g.available).slice(0, 3))
 const selected = ref(null)
+const router = useRouter()
+
+const plans = [
+  {
+    title: 'Turntable',
+    price: pricing.turntable,
+    per: 'per day',
+    blurb: 'Just the deck — for when you already have records to spin.',
+    cta: 'Rent a turntable',
+    turntable: true,
+  },
+  {
+    title: 'The Package',
+    price: pricing.package,
+    per: 'per day · turntable + 1 record',
+    blurb: `Everything you need to start listening, ${money(pricing.turntable + pricing.record - pricing.package)} less than renting them separately.`,
+    cta: 'Pick your record',
+    turntable: true,
+    featured: true,
+  },
+  {
+    title: 'Records',
+    price: pricing.record,
+    per: 'per record, per day',
+    blurb: 'Got your own turntable? Rent records on their own.',
+    cta: 'Browse records',
+    turntable: false,
+  },
+]
+
+// Sets up the rental for the chosen plan: a turntable on its own opens the
+// rental panel, the others go pick records.
+function choosePlan(plan) {
+  rental.turntable = plan.turntable
+  if (plan.title === 'Turntable') rental.panelOpen = true
+  else router.push('/catalog')
+}
 
 const steps = [
-  { n: '01', title: 'Pick a record', text: 'Choose a record from the catalog. It comes with the turntable. Want more than one? Add extras for a small fee.' },
-  { n: '02', title: 'Choose how long', text: 'Rent for a day, a few days or a week. Want more than one record? Add extras for a small fee.' },
+  { n: '01', title: 'Pick a record', text: "Choose a record from the catalog. With a turntable it's a package deal. Want more than one? Add as many as you like." },
+  { n: '02', title: 'Choose how long', text: 'Pay by the day — rent for one night or a couple of weeks. You only pay for the days you have it.' },
   { n: '03', title: 'We deliver & set up', text: "We bring everything to you free anywhere on campus, set it up, and collect it when you're done. Off campus? We deliver for a fee." },
 ]
 </script>
@@ -34,7 +72,7 @@ const steps = [
           <a href="#pricing" class="btn btn--ghost">See pricing</a>
         </div>
         <ul class="stats">
-          <li><strong>{{ money(durations[0].price) }}</strong><span>turntable + record, {{ durations[0].label.toLowerCase() }}</span></li>
+          <li><strong>{{ money(pricing.package) }}</strong><span>turntable + record, per day</span></li>
           <li><strong>{{ catalog.records.length }}+</strong><span>records to choose from</span></li>
           <li><strong>Free</strong><span>campus delivery</span></li>
         </ul>
@@ -117,23 +155,23 @@ const steps = [
   <section id="pricing" class="section wrap">
     <div class="section-head">
       <p class="eyebrow">Pricing</p>
-      <h2>One turntable. One record. Your timeline.</h2>
+      <h2>Pay by the day. Mix and match.</h2>
     </div>
 
     <ul class="included">
-      <li><span>✓</span> Turntable</li>
-      <li><span>✓</span> 1 record of your choice</li>
+      <li><span>✓</span> Priced per day</li>
+      <li><span>✓</span> Rent à la carte or as a package</li>
       <li><span>✓</span> Free delivery & setup on campus</li>
     </ul>
 
     <div class="plans">
-      <article v-for="d in durations" :key="d.id" class="plan" :class="{ featured: d.featured }">
-        <p v-if="d.featured" class="badge">Most popular</p>
-        <h3>{{ d.label }}</h3>
-        <p class="plan-blurb">{{ d.blurb }}</p>
-        <p class="plan-price">{{ money(d.price) }}</p>
-        <p class="plan-per">turntable + 1 record</p>
-        <RouterLink to="/catalog" class="btn" :class="d.featured ? 'btn--red' : 'btn--ghost'">Pick your record</RouterLink>
+      <article v-for="p in plans" :key="p.title" class="plan" :class="{ featured: p.featured }">
+        <p v-if="p.featured" class="badge">Best value</p>
+        <h3>{{ p.title }}</h3>
+        <p class="plan-blurb">{{ p.blurb }}</p>
+        <p class="plan-price">{{ money(p.price) }}</p>
+        <p class="plan-per">{{ p.per }}</p>
+        <button class="btn" :class="p.featured ? 'btn--red' : 'btn--ghost'" @click="choosePlan(p)">{{ p.cta }}</button>
       </article>
     </div>
 
@@ -141,7 +179,7 @@ const steps = [
       <div class="extras-card">
         <h3>Extras</h3>
         <ul class="price-list">
-          <li><span>Each extra record</span><strong>+{{ money(extraRecord.price) }} / {{ extraRecord.per }}</strong></li>
+          <li><span>Each extra record with the package</span><strong>+{{ money(pricing.record) }} / day</strong></li>
           <li v-for="g in features.gear ? catalog.gear : []" :key="g.id">
             <span>{{ g.name }}</span><strong>+{{ money(g.price) }} / {{ g.per }}</strong>
           </li>
@@ -151,7 +189,7 @@ const steps = [
         <h3>Delivery</h3>
         <ul class="price-list">
           <li><span>{{ delivery.campus.label }}</span><strong>Free</strong></li>
-          <li><span>{{ delivery.offCampus.label }}</span><strong>from {{ money(delivery.offCampus.fee) }}</strong></li>
+          <li><span>{{ delivery.offCampus.label }}</span><strong>Depends on location</strong></li>
         </ul>
         <p>{{ delivery.campus.note }} {{ delivery.offCampus.note }}</p>
       </div>
@@ -175,7 +213,7 @@ const steps = [
   <!-- CTA -->
   <section class="wrap">
     <div class="cta-band">
-      <h2>A turntable and a record at your door for {{ money(durations[0].price) }}.</h2>
+      <h2>A turntable and a record at your door for {{ money(pricing.package) }} a day.</h2>
       <RouterLink to="/catalog" class="btn">Start digging →</RouterLink>
     </div>
   </section>

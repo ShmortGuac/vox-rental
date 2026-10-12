@@ -121,7 +121,7 @@ Supabase rejects a setlist that isn't in one of these shapes, so a typo can't br
 
 ## Other settings
 
-Rental lengths, prices, extra-record price, delivery fees, contact details and the FAQ live in `src/data/site.js`.
+Per-day prices (`pricing`: turntable, record, package), the longest rental bookable online (`maxDays`), delivery fees, contact details and the FAQ live in `src/data/site.js`. The rental panel applies the package price automatically when a customer rents a turntable with at least one record.
 
 ## Deploying
 

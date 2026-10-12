@@ -2,14 +2,14 @@
 import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import GearIcon from './GearIcon.vue'
-import { durations, extraRecord, delivery, features } from '../data/site'
-import { rental, summary, toggleRecord, toggleGear, gearCost, money, requestMailto } from '../stores/rental'
+import { pricing, maxDays, delivery, features } from '../data/site'
+import { rental, summary, clampDays, toggleRecord, toggleGear, gearCost, money, requestMailto } from '../stores/rental'
 
 const route = useRoute()
 const panel = ref(null)
 
 const mailto = computed(() => requestMailto())
-const canSend = computed(() => rental.details.name.trim() && rental.details.phone.trim() && rental.details.location.trim())
+const canSend = computed(() => summary.value.hasItems && rental.details.name.trim() && rental.details.phone.trim() && rental.details.location.trim())
 
 function close() {
   rental.panelOpen = false
@@ -65,22 +65,49 @@ onUnmounted(() => document.removeEventListener('keydown', onKey))
           </header>
 
           <div class="drawer-body">
-            <!-- Duration -->
+            <!-- Turntable -->
             <section>
-              <h3>How long?</h3>
+              <h3>Turntable</h3>
               <div class="seg">
-                <button
-                  v-for="d in durations"
-                  :key="d.id"
-                  :class="{ active: rental.durationId === d.id }"
-                  :aria-pressed="rental.durationId === d.id"
-                  @click="rental.durationId = d.id"
-                >
-                  <strong>{{ d.label }}</strong>
-                  <span>{{ money(d.price) }}</span>
+                <button :class="{ active: rental.turntable }" :aria-pressed="rental.turntable" @click="rental.turntable = true">
+                  <strong>Rent one</strong>
+                  <span>{{ money(pricing.package) }}/day with a record</span>
+                </button>
+                <button :class="{ active: !rental.turntable }" :aria-pressed="!rental.turntable" @click="rental.turntable = false">
+                  <strong>I have my own</strong>
+                  <span>Records only</span>
                 </button>
               </div>
-              <p class="note">Includes a turntable + 1 record of your choice.</p>
+              <p class="note">
+                <template v-if="!rental.turntable">Each record is {{ money(pricing.record) }}/day.</template>
+                <template v-else-if="summary.usePackage">
+                  Package price — saves you {{ money(summary.packageSaving) }}/day versus renting the turntable and record separately.
+                </template>
+                <template v-else>Turntable on its own is {{ money(pricing.turntable) }}/day. Add a record to get the package price.</template>
+              </p>
+            </section>
+
+            <!-- Days -->
+            <section>
+              <h3>How many days?</h3>
+              <div class="days">
+                <button class="step" aria-label="One day less" :disabled="rental.days <= 1" @click="rental.days = clampDays(rental.days - 1)">−</button>
+                <label class="days-value">
+                  <input
+                    :value="rental.days"
+                    type="number"
+                    inputmode="numeric"
+                    min="1"
+                    :max="maxDays"
+                    aria-label="Number of days"
+                    @change="rental.days = clampDays($event.target.value); $event.target.value = rental.days"
+                  />
+                  <span>{{ rental.days === 1 ? 'day' : 'days' }}</span>
+                </label>
+                <button class="step" aria-label="One day more" :disabled="rental.days >= maxDays" @click="rental.days = clampDays(rental.days + 1)">+</button>
+                <span class="per-day">{{ money(summary.perDay) }}/day</span>
+              </div>
+              <p class="note">Need longer than {{ maxDays }} days? Ask us in the notes.</p>
             </section>
 
             <!-- Records -->
@@ -95,12 +122,14 @@ onUnmounted(() => document.removeEventListener('keydown', onKey))
                     <small>{{ r.artist }}</small>
                   </span>
                   <span class="line-price">
-                    {{ i === 0 ? 'Included' : `+${money(extraRecord.per === 'day' ? extraRecord.price * summary.days : extraRecord.price)}` }}
+                    {{ summary.usePackage && i === 0 ? 'In package' : `${money(pricing.record)}/day` }}
                   </span>
                   <button class="remove" :aria-label="`Remove ${r.title}`" @click="toggleRecord(r.id)">×</button>
                 </li>
               </ul>
-              <p v-else class="empty">No records picked yet — your first one is included.</p>
+              <p v-else class="empty">
+                {{ rental.turntable ? 'No records yet — add one to get the package price.' : 'No records picked yet.' }}
+              </p>
               <RouterLink to="/catalog" class="link">Browse records →</RouterLink>
             </section>
 
@@ -132,7 +161,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKey))
                 </button>
                 <button :class="{ active: rental.offCampus }" :aria-pressed="rental.offCampus" @click="rental.offCampus = true">
                   <strong>{{ delivery.offCampus.label }}</strong>
-                  <span>from {{ money(delivery.offCampus.fee) }}</span>
+                  <span>Fee by location</span>
                 </button>
               </div>
               <p class="note">{{ rental.offCampus ? delivery.offCampus.note : delivery.campus.note }}</p>
@@ -156,15 +185,19 @@ onUnmounted(() => document.removeEventListener('keydown', onKey))
 
           <footer class="drawer-foot">
             <dl class="totals">
-              <div><dt>{{ summary.duration.label }} — turntable + 1 record</dt><dd>{{ money(summary.duration.price) }}</dd></div>
-              <div v-if="summary.extraCount"><dt>{{ summary.extraCount }} extra record{{ summary.extraCount > 1 ? 's' : '' }}</dt><dd>{{ money(summary.extraRecordsCost) }}</dd></div>
+              <div v-for="l in summary.lines" :key="l.label">
+                <dt>{{ l.label }} <small>{{ money(l.perDay) }} × {{ summary.days }}</small></dt>
+                <dd>{{ money(l.cost) }}</dd>
+              </div>
               <div v-if="summary.items.length"><dt>Add-ons</dt><dd>{{ money(summary.gearTotal) }}</dd></div>
-              <div><dt>Delivery</dt><dd>{{ summary.deliveryFee ? `from ${money(summary.deliveryFee)}` : 'Free' }}</dd></div>
-              <div class="grand"><dt>Estimated total</dt><dd>{{ money(summary.total) }}</dd></div>
+              <div><dt>Delivery</dt><dd>{{ rental.offCampus ? 'Quoted by location' : 'Free' }}</dd></div>
+              <div class="grand"><dt>Estimated total</dt><dd>{{ money(summary.total) }}<small v-if="rental.offCampus"> + delivery</small></dd></div>
             </dl>
             <a class="btn btn--red send" :href="mailto" :aria-disabled="!canSend">Send rental request</a>
             <p class="foot-note">
-              {{ canSend ? "Opens your email with everything filled in. We'll confirm availability and the final price." : 'Fill in your name, phone and location to send.' }}
+              <template v-if="!summary.hasItems">Pick a record or rent a turntable to send a request.</template>
+              <template v-else-if="canSend">Opens your email with everything filled in. We'll confirm availability and the final price.</template>
+              <template v-else>Fill in your name, phone and location to send.</template>
             </p>
           </footer>
         </aside>
@@ -370,6 +403,74 @@ h3 {
   color: var(--red);
 }
 
+/* Day picker */
+.days {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.step {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1.5px solid var(--ink);
+  background: transparent;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.step:hover:not(:disabled) {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.step:disabled {
+  border-color: var(--line);
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+.days-value {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding-inline: 4px;
+}
+
+.days-value input {
+  width: 2.6ch;
+  border: 0;
+  border-bottom: 1.5px solid var(--line);
+  background: transparent;
+  font-size: 28px;
+  font-weight: 850;
+  text-align: center;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.days-value input::-webkit-inner-spin-button,
+.days-value input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.days-value input:focus {
+  border-color: var(--ink);
+  outline: none;
+}
+
+.days-value span {
+  color: var(--muted);
+}
+
+.per-day {
+  margin-left: auto;
+  font-weight: 800;
+}
+
 .note,
 .empty {
   margin-top: 10px;
@@ -522,6 +623,12 @@ img.swatch {
   color: var(--muted);
 }
 
+.totals dt small {
+  margin-left: 4px;
+  font-size: 12px;
+  opacity: 0.8;
+}
+
 .totals dd {
   margin: 0;
   font-weight: 600;
@@ -541,6 +648,12 @@ img.swatch {
 
 .totals .grand dd {
   font-weight: 900;
+}
+
+.totals .grand dd small {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
 }
 
 .send {
